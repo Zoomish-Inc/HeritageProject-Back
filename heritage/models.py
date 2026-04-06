@@ -46,7 +46,7 @@ class HeritageObject(models.Model):
     short_description_uz = models.TextField("Краткое описание (uz)", blank=True)
     order = models.PositiveIntegerField("Порядок в каталоге", default=0)
     is_published = models.BooleanField("Опубликовано", default=False)
-    cover_image = models.ImageField("Обложка", upload_to='covers/', blank=True, null=True)
+    cover_image = models.URLField("Обложка", blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
