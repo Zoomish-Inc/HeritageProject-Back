@@ -74,7 +74,7 @@ class ArchitectureDetail(models.Model):
     title_uz = models.CharField(max_length=255, blank=True)
     description_ru = models.TextField()
     description_uz = models.TextField(blank=True)
-    image = models.ImageField(upload_to='architecture_details/', blank=True, null=True)
+    image = models.URLField("Изображения", blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -88,8 +88,8 @@ class BeforeAfterPair(models.Model):
     heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='before_after_pairs')
     title_ru = models.CharField(max_length=255, blank=True)
     title_uz = models.CharField(max_length=255, blank=True)
-    before_image = models.ImageField(upload_to='before_after/')
-    after_image = models.ImageField(upload_to='before_after/')
+    before_image = models.URLField("Изображения до", blank=True)
+    after_image = models.URLField("Изображения после", blank=True)
     year_before = models.IntegerField(null=True, blank=True)
     year_after = models.IntegerField(null=True, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -107,7 +107,7 @@ class HistoricalFigure(models.Model):
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photo = models.ImageField(upload_to='figures/', blank=True, null=True)
+    photo = models.URLField("Изображения", blank=True)
     is_architect_bio = models.BooleanField("Это биография архитектора", default=False)
     order = models.PositiveIntegerField(default=0)
 
