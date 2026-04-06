@@ -36,3 +36,10 @@ class HeritageDetailView(APIView, ApiResponseMixin):
 
         serializer = HeritageObjectSerializer(obj, context={'request': request})
         return self.get_response(data=serializer.data)
+    
+class AppView(APIView, ApiResponseMixin):
+    def get(self, request):
+        return self.get_response(
+            data='pong',
+            message=None
+        )
