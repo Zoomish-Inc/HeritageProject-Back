@@ -108,10 +108,11 @@ class HeritageListItemSerializer(serializers.ModelSerializer):
         ]
 
     def get_cover(self, obj):
-        if obj.cover_image:
-            request = self.context.get('request')
-            return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
-        return None
+        value = obj.cover_image
+        if not value:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(value) if request else value
 
 
 class HeritageObjectSerializer(serializers.ModelSerializer):
@@ -152,7 +153,8 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
         ]
 
     def get_cover(self, obj):
-        if obj.cover_image:
-            request = self.context.get('request')
-            return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
-        return None
+        value = obj.cover_image
+        if not value:
+            return None
+        request = self.context.get('request')
+        return request.build_absolute_uri(value) if request else value
