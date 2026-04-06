@@ -29,8 +29,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1',
-    'heritageproject-back.onrender.com'
+    'localhost,127.0.0.1'
 ).split(',')
 
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
