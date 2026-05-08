@@ -70,6 +70,21 @@ class HeritageObjectAdmin(admin.ModelAdmin):
     # Автоматический slug
     prepopulated_fields = {'slug': ('name_ru',)}
 
+    def save_model(self, request, obj, form, change):
+        # Проверка: если пытаемся опубликовать
+        if obj.is_published:
+            published_count = HeritageObject.objects.filter(is_published=True).exclude(pk=obj.pk).count()
+            if published_count >= 6:
+                self.message_user(request, 
+                    '❌ Нельзя опубликовать больше 6 объектов! '
+                    'Сначала снимите публикацию с другого объекта.', 
+                    level='error')
+                return
+        
+        # Если проверку прошли - сохраняем
+        super().save_model(request, obj, form, change)
+        self.message_user.success(request, '✅ Объект сохранен')
+
 # Регистрируем остальные модели (для прямого редактирования)
 admin.site.register(ArchitectureDetail)
 admin.site.register(BeforeAfterPair)

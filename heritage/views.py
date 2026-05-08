@@ -19,7 +19,7 @@ class ApiResponseMixin:
 
 class HeritageListView(APIView, ApiResponseMixin):
     def get(self, request):
-        queryset = HeritageObject.objects.filter(is_published=True).order_by('order')
+        queryset = HeritageObject.objects.filter(is_published=True).order_by('order')[:6]
         serializer = HeritageListItemSerializer(queryset, many=True, context={'request': request})
         return self.get_response(data=serializer.data)
 

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 import uuid
 
 class HeritageObject(models.Model):
@@ -60,10 +61,21 @@ class HeritageObject(models.Model):
         return self.name_ru
 
     def save(self, *args, **kwargs):
+        if self.is_published:
+            published_count = HeritageObject.objects.filter(
+                is_published=True
+            ).exclude(pk=self.pk).count()
+            
+            if published_count >= 6:
+                raise ValidationError(
+                    'Нельзя опубликовать больше 6 объектов. '
+                    'Сначала снимите публикацию с другого объекта.'
+                )
+
         if not self.slug:
             self.slug = slugify(self.name_ru)
-        super().save(*args, **kwargs)
 
+        super().save(*args, **kwargs)
 
 # ==================== Связанные модели ====================
 
