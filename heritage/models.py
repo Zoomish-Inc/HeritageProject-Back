@@ -82,6 +82,9 @@ class HeritageListItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     isPublished = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['order']
+
 
 # ====================== ВЛОЖЕННЫЕ МОДЕЛИ ======================
 
