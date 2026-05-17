@@ -38,6 +38,7 @@ CSRF_TRUSTED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,7 +53,6 @@ INSTALLED_APPS = [
 
     # outer apps
     'rest_framework',
-    'corsheaders',
     'django_filters',
     'drf_spectacular',
 ]
@@ -168,6 +168,7 @@ CORS_ALLOW_HEADERS = [
 
 # Основные фронтенды
 CORS_ALLOWED_ORIGINS = [
+    "https://heritage-project-front-5q9b.vercel.app",
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'https://heritage-project-front.vercel.app',
