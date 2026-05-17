@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 import uuid
 
 
@@ -61,9 +63,19 @@ class HeritageObject(models.Model):
         return self.name_ru
 
     def save(self, *args, **kwargs):
+        if self.is_published:
+            published_count = HeritageObject.objects.filter(
+                is_published=True
+            ).exclude(pk=self.pk).count()
+            
+            if published_count >= 6:
+                raise ValidationError(
+                    'Нельзя опубликовать больше 6 объектов. '
+                    'Сначала снимите публикацию с другого объекта.'
+                )
+
         if not self.slug:
             self.slug = slugify(self.name_ru)
-        super().save(*args, **kwargs)
 
 class HeritageListItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -144,15 +156,29 @@ class BeforeAfterPair(models.Model):
         'media_files.MediaFile',
         on_delete=models.CASCADE,
         related_name='after_pairs',
-        verbose_name="Фото 'Стало'"
+        verbose_name=("Фото 'Стало'")
     )
-    
-    sort_order = models.PositiveIntegerField("Порядок", default=0)
+
+    year_before = models.PositiveIntegerField(("Год 'Было'"), null=True, blank=True)
+    year_after = models.PositiveIntegerField(("Год 'Стало'"), null=True, blank=True)
+
+    description_ru = models.TextField(("Описание (RU)"), blank=True)
+    description_uz = models.TextField(("Описание (UZ)"), blank=True)
+
+    sort_order = models.PositiveIntegerField(("Порядок"), default=0)
 
     class Meta:
         ordering = ['sort_order']
-        verbose_name = "Пара Было/Стало"
-        verbose_name_plural = "Пары Было/Стало"
+        verbose_name = ("Пара Было/Стало")
+        verbose_name_plural = ("Пары Было/Стало")
+
+    def __str__(self):
+        return self.title_ru or str(self.heritage_object)
+
+    class Meta:
+        ordering = ['sort_order']
+        verbose_name = ("Пара Было/Стало")
+        verbose_name_plural = ("Пары Было/Стало")
 
     def __str__(self):
         return self.title_ru or f"Пара для {self.heritage_object}"
