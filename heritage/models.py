@@ -84,18 +84,54 @@ class ArchitectureDetail(models.Model):
 
 
 class BeforeAfterPair(models.Model):
-    """Ретроспектива (пары «до/после»)"""
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='before_after_pairs')
-    title_ru = models.CharField(max_length=255, blank=True)
-    title_uz = models.CharField(max_length=255, blank=True)
-    before_image = models.URLField("Изображения до", blank=True)
-    after_image = models.URLField("Изображения после", blank=True)
-    year_before = models.IntegerField(null=True, blank=True)
-    year_after = models.IntegerField(null=True, blank=True)
-    order = models.PositiveIntegerField(default=0)
+    """Пара "Было / Стало" """
+
+    heritage_object = models.ForeignKey(
+        'HeritageObject',
+        on_delete=models.CASCADE,
+        related_name='before_after_pairs',
+        verbose_name=("Объект наследия")
+    )
+
+    title_ru = models.CharField(("Название пары (RU)"), max_length=255, blank=True)
+    title_uz = models.CharField(("Название пары (UZ)"), max_length=255, blank=True)
+
+    before = models.ForeignKey(
+        'media_files.MediaFile',
+        on_delete=models.CASCADE,
+        related_name='before_pairs',
+        verbose_name=("Фото 'Было'")
+    )
+    after = models.ForeignKey(
+        'media_files.MediaFile',
+        on_delete=models.CASCADE,
+        related_name='after_pairs',
+        verbose_name=("Фото 'Стало'")
+    )
+
+    year_before = models.PositiveIntegerField(("Год 'Было'"), null=True, blank=True)
+    year_after = models.PositiveIntegerField(("Год 'Стало'"), null=True, blank=True)
+
+    description_ru = models.TextField(("Описание (RU)"), blank=True)
+    description_uz = models.TextField(("Описание (UZ)"), blank=True)
+
+    sort_order = models.PositiveIntegerField(("Порядок"), default=0)
 
     class Meta:
-        ordering = ['order']
+        ordering = ['sort_order']
+        verbose_name = ("Пара Было/Стало")
+        verbose_name_plural = ("Пары Было/Стало")
+
+    def __str__(self):
+        return self.title_ru or str(self.heritage_object)
+
+    class Meta:
+        ordering = ['sort_order']
+        verbose_name = ("Пара Было/Стало")
+        verbose_name_plural = ("Пары Было/Стало")
+
+    def __str__(self):
+        return self.title_ru or f"Пара для {self.heritage_object}"
 
 
 class HistoricalFigure(models.Model):
