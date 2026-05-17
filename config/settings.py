@@ -14,18 +14,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ====================== SECRET KEY ======================
+# Временно для разработки
+SECRET_KEY = 'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only'
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = True   # Временно включаем отладку
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
@@ -120,15 +116,8 @@ LOGGING = {
 # ====================== DATABASE =======================
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'OPTIONS': {
-            'sslmode': 'require' if not DEBUG else 'prefer'
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -155,8 +144,22 @@ REST_FRAMEWORK = {
 }
 
 # ====================== CORS (front) ======================
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 CORS_ALLOW_CREDENTIALS = True
+
+# Основные фронтенды
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://heritage-project-front.vercel.app',
+    'https://*.vercel.app',           # для всех поддоменов vercel
+]
+
+# Если хотите получать origins из .env (опционально)
+# CORS_ALLOWED_ORIGINS = [
+#     origin.strip() 
+#     for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+#     if origin.strip()
+# ]
 
 # ====================== FILES ======================
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
@@ -179,6 +182,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# ====================== MEDIA & CDN ======================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# CDN (если используете)
+MEDIA_BASE_URL = os.getenv('MEDIA_BASE_URL', '')  # Например: https://cdn.example.com
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
