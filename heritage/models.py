@@ -8,7 +8,7 @@ class HeritageObject(models.Model):
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     order = models.PositiveIntegerField(default=0)
 
-    name_ru = models.CharField(max_length=255)
+    name_ru = models.CharField(max_length=255, blank=True)
     name_uz = models.CharField(max_length=255, blank=True)
     formerName_ru = models.CharField(max_length=255, blank=True)
     formerName_uz = models.CharField(max_length=255, blank=True)
@@ -21,8 +21,15 @@ class HeritageObject(models.Model):
     address_ru = models.TextField(blank=True)
     address_uz = models.TextField(blank=True)
 
+    lat = models.FloatField(null=True, blank=True)
+    lng = models.FloatField(null=True, blank=True)
+
+    mapUrl = models.URLField(blank=True)
+
     yearBuilt = models.IntegerField(null=True, blank=True)
     yearRange = models.CharField(max_length=50, blank=True)
+    yearBuiltLabel_ru = models.CharField(max_length=255, blank=True)
+    yearBuiltLabel_uz = models.CharField(max_length=255, blank=True)
 
     architecturalStyle_ru = models.CharField(max_length=255, blank=True)
     architecturalStyle_uz = models.CharField(max_length=255, blank=True)
@@ -40,13 +47,9 @@ class HeritageObject(models.Model):
     visualStyleNotes_ru = models.TextField(blank=True)
     visualStyleNotes_uz = models.TextField(blank=True)
 
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    mapUrl = models.URLField(blank=True)
-
-    is_published = models.BooleanField(default=False)
-    tour_published = models.BooleanField(default=False)
-    tour_entry_url = models.URLField(blank=True, null=True)
+    isPublished = models.BooleanField(default=False)
+    tourPublished = models.BooleanField(default=False)
+    tourEntryUrl = models.URLField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -62,10 +65,27 @@ class HeritageObject(models.Model):
             self.slug = slugify(self.name_ru)
         super().save(*args, **kwargs)
 
+class HeritageListItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    name_ru = models.CharField(max_length=255, blank=True)
+    name_uz = models.CharField(max_length=255, blank=True)
+    yearRange = models.CharField(max_length=50, blank=True)
+    address_ru = models.CharField(max_length=255, blank=True)
+    address_uz = models.CharField(max_length=255, blank=True)
+    coverImageUrl = models.URLField(blank=True)
+    shortDescription_ru = models.CharField(max_length=255, blank=True)
+    shortDescription_uz = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    isPublished = models.BooleanField(default=False)
+
 
 # ====================== ВЛОЖЕННЫЕ МОДЕЛИ ======================
 
-class Milestone(models.Model):
+class BiographyMilestone(models.Model):
     year = models.IntegerField()
     event_ru = models.CharField(max_length=500)
     event_uz = models.CharField(max_length=500, blank=True)
@@ -76,7 +96,13 @@ class Milestone(models.Model):
 
 
 class ArchitectureDetail(models.Model):
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='architectureDetails')
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='architectureDetails'
+        )
+    
     title_ru = models.CharField(max_length=255)
     title_uz = models.CharField(max_length=255, blank=True)
     description_ru = models.TextField(blank=True)
@@ -92,21 +118,51 @@ class ArchitectureDetail(models.Model):
 
 
 class BeforeAfterPair(models.Model):
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='beforeAfterPairs')
-    label_ru = models.CharField(max_length=255, blank=True)
-    label_uz = models.CharField(max_length=255, blank=True)
-    before = models.URLField()      # before.url
-    after = models.URLField()       # after.url
-    year_before = models.IntegerField(null=True, blank=True)
-    year_after = models.IntegerField(null=True, blank=True)
-    order = models.PositiveIntegerField(default=0)
+    """Пара "Было / Стало" """
+    
+    heritage_object = models.ForeignKey(
+        'HeritageObject',
+        on_delete=models.CASCADE,
+        related_name='before_after_pairs',
+        verbose_name="Объект наследия"
+    )
+    
+    label_ru = models.CharField("Название пары (RU)", max_length=255, blank=True)
+    label_uz = models.CharField("Название пары (UZ)", max_length=255, blank=True)
+
+    before = models.ForeignKey(
+        'media_files.MediaFile',
+        on_delete=models.CASCADE,
+        related_name='before_pairs',
+        verbose_name="Фото 'Было'"
+    )
+
+    after = models.ForeignKey(
+        'media_files.MediaFile',
+        on_delete=models.CASCADE,
+        related_name='after_pairs',
+        verbose_name="Фото 'Стало'"
+    )
+    
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:
-        ordering = ['order']
+        ordering = ['sort_order']
+        verbose_name = "Пара Было/Стало"
+        verbose_name_plural = "Пары Было/Стало"
+
+    def __str__(self):
+        return self.title_ru or f"Пара для {self.heritage_object}"
 
 
 class HistoricalFigure(models.Model):
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='historicalFigures')
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='historicalFigures'
+        )
+    
     name_ru = models.CharField(max_length=255)
     name_uz = models.CharField(max_length=255, blank=True)
     role_ru = models.CharField(max_length=255, blank=True)
@@ -114,24 +170,42 @@ class HistoricalFigure(models.Model):
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
     photoUrl = models.URLField(blank=True)
-    is_architect_bio = models.BooleanField(default=False)
+    bioSourceUrl = models.URLField(blank=True)
+    bioSourceCredit_ru = models.CharField(max_length=255, blank=True)
+    bioSourceCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
-    milestones = models.ManyToManyField(Milestone, blank=True)
+    milestones = models.ManyToManyField(BiographyMilestone, blank=True)
 
     class Meta:
         ordering = ['order']
 
 
-class Photo(models.Model):
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='photos')
+class PhotoItem(models.Model):
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='photos'
+        )
+    
+    heritage_history_media = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='historyMedia',
+        blank=True, 
+        null=True
+    )
+    
     url = models.URLField()
     caption_ru = models.CharField(max_length=255, blank=True)
     caption_uz = models.CharField(max_length=255, blank=True)
+    isHistorical = models.BooleanField(default=False)
+    year = models.IntegerField(blank=True)
     sourceUrl = models.URLField(blank=True)
     credit_ru = models.CharField(max_length=255, blank=True)
     credit_uz = models.CharField(max_length=255, blank=True)
-    isHistorical = models.BooleanField(default=False)
+
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -140,7 +214,13 @@ class Photo(models.Model):
 
 class AudioGuide(models.Model):
     """Аудиогид как отдельная модель (один на объект)"""
-    heritage = models.OneToOneField(HeritageObject, on_delete=models.CASCADE, related_name='audioGuide')
+
+    heritage = models.OneToOneField(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='audioGuide'
+        )
+    
     narratorLabel_ru = models.CharField(max_length=255, blank=True)
     narratorLabel_uz = models.CharField(max_length=255, blank=True)
     transcript_ru = models.TextField(blank=True)
@@ -151,8 +231,14 @@ class AudioGuide(models.Model):
     musicSuggestion_uz = models.TextField(blank=True)
 
 
-class AudioTrack(models.Model):
-    audio_guide = models.ForeignKey(AudioGuide, on_delete=models.CASCADE, related_name='tracks')
+class AudioTrackTrack(models.Model):
+
+    audio_guide = models.ForeignKey(
+        AudioGuide, 
+        on_delete=models.CASCADE, 
+        related_name='tracks'
+        )
+    
     url = models.URLField()
     shortTitle_ru = models.CharField(max_length=255, blank=True)
     shortTitle_uz = models.CharField(max_length=255, blank=True)
@@ -162,7 +248,12 @@ class AudioTrack(models.Model):
 
 
 class ArchitectBio(models.Model):
-    heritage = models.OneToOneField(HeritageObject, on_delete=models.CASCADE, related_name='architectBio')
+    heritage = models.OneToOneField(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='architectBio'
+        )
+    
     name_ru = models.CharField(max_length=255)
     name_uz = models.CharField(max_length=255, blank=True)
     role_ru = models.CharField(max_length=255, blank=True)
@@ -171,4 +262,4 @@ class ArchitectBio(models.Model):
     bio_uz = models.TextField(blank=True)
     photoUrl = models.URLField(blank=True)
 
-    milestones = models.ManyToManyField(Milestone, blank=True)
+    milestones = models.ManyToManyField(BiographyMilestone, blank=True)
