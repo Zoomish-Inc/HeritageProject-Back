@@ -197,8 +197,8 @@ class HeritageObjectAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         # Проверка: если пытаемся опубликовать
-        if obj.is_published:
-            published_count = HeritageObject.objects.filter(is_published=True).exclude(pk=obj.pk).count()
+        if obj.isPublished:
+            published_count = HeritageObject.objects.filter(isPublished=True).exclude(pk=obj.pk).count()
             if published_count >= 6:
                 self.message_user(request, 
                     '❌ Нельзя опубликовать больше 6 объектов! '
