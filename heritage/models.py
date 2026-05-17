@@ -126,7 +126,7 @@ class BeforeAfterPair(models.Model):
     heritage_object = models.ForeignKey(
         'HeritageObject',
         on_delete=models.CASCADE,
-        related_name='before_after_pairs',
+        related_name='beforeAfterPairs',
         verbose_name="Объект наследия"
     )
     
@@ -234,12 +234,12 @@ class AudioGuide(models.Model):
     musicSuggestion_uz = models.TextField(blank=True)
 
 
-class AudioTrackTrack(models.Model):
+class AudioGuideTrack(models.Model):
 
     audio_guide = models.ForeignKey(
         AudioGuide, 
         on_delete=models.CASCADE, 
-        related_name='tracks'
+        related_name='track'
         )
     
     url = models.URLField()
