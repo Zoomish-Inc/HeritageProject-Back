@@ -15,7 +15,16 @@ from .models import (
 class ArchitectureDetailInline(admin.TabularInline):
     model = ArchitectureDetail
     extra = 1
-    fields = ('order', 'title_ru', 'title_uz', 'description_ru', 'imageUrl')
+    fields = ('order', 
+              'title_ru', 
+              'title_uz', 
+              'description_ru', 
+              'description_uz', 
+              'imageUrl', 
+              'imageSourceUrl', 
+              'imageCredit_ru', 
+              'imageCredit_uz',
+              )
 
 
 class BeforeAfterPairInline(admin.TabularInline):
@@ -30,6 +39,7 @@ class BeforeAfterPairInline(admin.TabularInline):
         'year_before',
         'year_after',
         'description_ru',
+        'description_uz',
     )
 
 
@@ -38,11 +48,17 @@ class HistoricalFigureInline(admin.StackedInline):
     extra = 1
     fields = (
         'order',
-        'is_architect_bio',
         'name_ru',
         'name_uz',
         'role_ru',
+        'role_uz',
+        'bio_ru',
+        'bio_uz',
         'photoUrl',
+        'bioSourceUrl',
+        'bioSourceCredit_ru',
+        'bioSourceCredit_uz',
+        'milestones',
     )
 
 
@@ -58,6 +74,8 @@ class PhotoItemInline(admin.TabularInline):
         'isHistorical',
         'year',
         'sourceUrl',
+        'credit_ru',
+        'credit_uz',
     )
 
 class HistoryMediaInline(admin.TabularInline):
@@ -72,13 +90,22 @@ class HistoryMediaInline(admin.TabularInline):
         'caption_uz',
         'isHistorical',
         'year',
+        'sourceUrl',
+        'credit_ru',
+        'credit_uz',
     )
 
 
 class AudioGuideTrackInline(admin.TabularInline):
     model = AudioGuideTrack
     extra = 1
-    fields = ('order', 'url', 'shortTitle_ru', 'shortTitle_uz', 'fullTitle_ru')
+    fields = ('order', 
+              'url', 
+              'shortTitle_ru', 
+              'shortTitle_uz', 
+              'fullTitle_ru',
+              'fullTitle_uz',
+              )
 
 
 class AudioGuideInline(admin.StackedInline):
@@ -100,10 +127,14 @@ class ArchitectBioInline(admin.StackedInline):
     model = ArchitectBio
     extra = 1
     fields = (
-        'name_ru', 'name_uz',
-        'role_ru', 'role_uz',
-        'bio_ru', 'bio_uz',
+        'name_ru', 
+        'name_uz',
+        'role_ru', 
+        'role_uz',
+        'bio_ru', 
+        'bio_uz',
         'photoUrl',
+        'milestones',
     )
 
 @admin.register(HeritageObject)
