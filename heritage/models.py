@@ -4,58 +4,60 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 import uuid
 
+
 class HeritageObject(models.Model):
-    """Основной объект культурного наследия (ОКН)"""
-    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
-    # Название
-    name_ru = models.CharField("Название (ru)", max_length=255)
-    name_uz = models.CharField("Название (uz)", max_length=255, blank=True)
-    former_name_ru = models.CharField("Прежнее название (ru)", max_length=255, blank=True)
-    former_name_uz = models.CharField("Прежнее название (uz)", max_length=255, blank=True)
-    
-    # Назначение
-    current_purpose_ru = models.CharField("Назначение сейчас (ru)", max_length=255, blank=True)
-    current_purpose_uz = models.CharField("Назначение сейчас (uz)", max_length=255, blank=True)
-    historical_purpose_ru = models.CharField("Назначение ранее (ru)", max_length=255, blank=True)
-    historical_purpose_uz = models.CharField("Назначение ранее (uz)", max_length=255, blank=True)
-    
-    # Адрес
-    address_ru = models.TextField("Адрес (ru)", blank=True)
-    address_uz = models.TextField("Адрес (uz)", blank=True)
-    
-    # Год постройки
-    year_built = models.IntegerField("Год постройки", null=True, blank=True)
-    year_range = models.CharField("Диапазон лет (строка)", max_length=50, blank=True)
-    
-    # Стиль и архитектор
-    architectural_style_ru = models.CharField("Стиль (ru)", max_length=255, blank=True)
-    architectural_style_uz = models.CharField("Стиль (uz)", max_length=255, blank=True)
-    architect_ru = models.CharField("Архитектор (ru)", max_length=255, blank=True)
-    architect_uz = models.CharField("Архитектор (uz)", max_length=255, blank=True)
-    
-    # Описания
-    architectural_description_ru = models.TextField("Архитектурное описание (ru)", blank=True)
-    architectural_description_uz = models.TextField("Архитектурное описание (uz)", blank=True)
-    history_ru = models.TextField("История (ru)", blank=True)
-    history_uz = models.TextField("История (uz)", blank=True)
-    
-    # SEO и каталог
-    slug = models.SlugField("Slug (URL)", max_length=255, unique=True, blank=True)
-    short_description_ru = models.TextField("Краткое описание (ru)", blank=True)
-    short_description_uz = models.TextField("Краткое описание (uz)", blank=True)
-    order = models.PositiveIntegerField("Порядок в каталоге", default=0)
-    is_published = models.BooleanField("Опубликовано", default=False)
-    cover_image = models.URLField("Обложка", blank=True)
-    
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    name_ru = models.CharField(max_length=255, blank=True)
+    name_uz = models.CharField(max_length=255, blank=True)
+    formerName_ru = models.CharField(max_length=255, blank=True)
+    formerName_uz = models.CharField(max_length=255, blank=True)
+
+    currentPurpose_ru = models.CharField(max_length=255, blank=True)
+    currentPurpose_uz = models.CharField(max_length=255, blank=True)
+    historicalPurpose_ru = models.CharField(max_length=255, blank=True)
+    historicalPurpose_uz = models.CharField(max_length=255, blank=True)
+
+    address_ru = models.TextField(blank=True)
+    address_uz = models.TextField(blank=True)
+
+    lat = models.FloatField(null=True, blank=True)
+    lng = models.FloatField(null=True, blank=True)
+
+    mapUrl = models.URLField(blank=True)
+
+    yearBuilt = models.IntegerField(null=True, blank=True)
+    yearRange = models.CharField(max_length=50, blank=True)
+    yearBuiltLabel_ru = models.CharField(max_length=255, blank=True)
+    yearBuiltLabel_uz = models.CharField(max_length=255, blank=True)
+
+    architecturalStyle_ru = models.CharField(max_length=255, blank=True)
+    architecturalStyle_uz = models.CharField(max_length=255, blank=True)
+    architect_ru = models.CharField(max_length=255, blank=True)
+    architect_uz = models.CharField(max_length=255, blank=True)
+
+    shortDescription_ru = models.TextField(blank=True)
+    shortDescription_uz = models.TextField(blank=True)
+    architecturalDescription_ru = models.TextField(blank=True)
+    architecturalDescription_uz = models.TextField(blank=True)
+    history_ru = models.TextField(blank=True)
+    history_uz = models.TextField(blank=True)
+
+    coverImageUrl = models.URLField(blank=True)
+    visualStyleNotes_ru = models.TextField(blank=True)
+    visualStyleNotes_uz = models.TextField(blank=True)
+
+    isPublished = models.BooleanField(default=False)
+    tourPublished = models.BooleanField(default=False)
+    tourEntryUrl = models.URLField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['order', 'name_ru']
-        verbose_name = "Объект наследия"
-        verbose_name_plural = "Объекты наследия"
 
     def __str__(self):
         return self.name_ru
@@ -75,45 +77,81 @@ class HeritageObject(models.Model):
         if not self.slug:
             self.slug = slugify(self.name_ru)
 
-        super().save(*args, **kwargs)
+class HeritageListItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    name_ru = models.CharField(max_length=255, blank=True)
+    name_uz = models.CharField(max_length=255, blank=True)
+    yearRange = models.CharField(max_length=50, blank=True)
+    address_ru = models.CharField(max_length=255, blank=True)
+    address_uz = models.CharField(max_length=255, blank=True)
+    coverImageUrl = models.URLField(blank=True)
+    shortDescription_ru = models.CharField(max_length=255, blank=True)
+    shortDescription_uz = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    isPublished = models.BooleanField(default=False)
 
-# ==================== Связанные модели ====================
+    class Meta:
+        ordering = ['order']
+
+
+# ====================== ВЛОЖЕННЫЕ МОДЕЛИ ======================
+
+class BiographyMilestone(models.Model):
+    year = models.IntegerField()
+    event_ru = models.CharField(max_length=500)
+    event_uz = models.CharField(max_length=500, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['year', 'order']
+
 
 class ArchitectureDetail(models.Model):
-    """7.2 Архитектура в деталях"""
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='architecture_details')
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='architectureDetails'
+        )
+    
     title_ru = models.CharField(max_length=255)
     title_uz = models.CharField(max_length=255, blank=True)
-    description_ru = models.TextField()
+    description_ru = models.TextField(blank=True)
     description_uz = models.TextField(blank=True)
-    image = models.URLField("Изображения", blank=True)
+    imageUrl = models.URLField(blank=True)
+    imageSourceUrl = models.URLField(blank=True)
+    imageCredit_ru = models.CharField(max_length=255, blank=True)
+    imageCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
-        verbose_name = "Архитектурная деталь"
-        verbose_name_plural = "Архитектурные детали"
 
 
 class BeforeAfterPair(models.Model):
     """Пара "Было / Стало" """
-
+    
     heritage_object = models.ForeignKey(
         'HeritageObject',
         on_delete=models.CASCADE,
-        related_name='before_after_pairs',
-        verbose_name=("Объект наследия")
+        related_name='beforeAfterPairs',
+        verbose_name="Объект наследия"
     )
-
-    title_ru = models.CharField(("Название пары (RU)"), max_length=255, blank=True)
-    title_uz = models.CharField(("Название пары (UZ)"), max_length=255, blank=True)
+    
+    label_ru = models.CharField("Название пары (RU)", max_length=255, blank=True)
+    label_uz = models.CharField("Название пары (UZ)", max_length=255, blank=True)
 
     before = models.ForeignKey(
         'media_files.MediaFile',
         on_delete=models.CASCADE,
         related_name='before_pairs',
-        verbose_name=("Фото 'Было'")
+        verbose_name="Фото 'Было'"
     )
+
     after = models.ForeignKey(
         'media_files.MediaFile',
         on_delete=models.CASCADE,
@@ -147,38 +185,110 @@ class BeforeAfterPair(models.Model):
 
 
 class HistoricalFigure(models.Model):
-    """Личности в истории + биография архитектора"""
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='historical_figures')
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='historicalFigures'
+        )
+    
     name_ru = models.CharField(max_length=255)
     name_uz = models.CharField(max_length=255, blank=True)
     role_ru = models.CharField(max_length=255, blank=True)
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photo = models.URLField("Изображения", blank=True)
-    is_architect_bio = models.BooleanField("Это биография архитектора", default=False)
+    photoUrl = models.URLField(blank=True)
+    bioSourceUrl = models.URLField(blank=True)
+    bioSourceCredit_ru = models.CharField(max_length=255, blank=True)
+    bioSourceCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
+
+    milestones = models.ManyToManyField(BiographyMilestone, blank=True)
 
     class Meta:
         ordering = ['order']
 
 
-class AudioGuideItem(models.Model):
-    """Голос наследия (аудиогид)"""
-    TYPE_CHOICES = [
-        ('intro', 'Краткий экскурс'),
-        ('atmosphere', 'Атмосферный звук'),
-        ('historian', 'Голос историка'),
-    ]
+class PhotoItem(models.Model):
+
+    heritage = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='photos'
+        )
     
-    heritage = models.ForeignKey(HeritageObject, on_delete=models.CASCADE, related_name='audio_guides')
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
-    title_ru = models.CharField(max_length=255)
-    title_uz = models.CharField(max_length=255, blank=True)
-    audio_file = models.FileField(upload_to='audio/')
-    transcript_ru = models.TextField("Расшифровка (ru)", blank=True)
-    transcript_uz = models.TextField("Расшифровка (uz)", blank=True)
+    heritage_history_media = models.ForeignKey(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='historyMedia',
+        blank=True, 
+        null=True
+    )
+    
+    url = models.URLField()
+    caption_ru = models.CharField(max_length=255, blank=True)
+    caption_uz = models.CharField(max_length=255, blank=True)
+    isHistorical = models.BooleanField(default=False)
+    year = models.IntegerField(blank=True)
+    sourceUrl = models.URLField(blank=True)
+    credit_ru = models.CharField(max_length=255, blank=True)
+    credit_uz = models.CharField(max_length=255, blank=True)
+
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
+
+
+class AudioGuide(models.Model):
+    """Аудиогид как отдельная модель (один на объект)"""
+
+    heritage = models.OneToOneField(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='audioGuide'
+        )
+    
+    narratorLabel_ru = models.CharField(max_length=255, blank=True)
+    narratorLabel_uz = models.CharField(max_length=255, blank=True)
+    transcript_ru = models.TextField(blank=True)
+    transcript_uz = models.TextField(blank=True)
+    atmosphereDescription_ru = models.TextField(blank=True)
+    atmosphereDescription_uz = models.TextField(blank=True)
+    musicSuggestion_ru = models.TextField(blank=True)
+    musicSuggestion_uz = models.TextField(blank=True)
+
+
+class AudioGuideTrack(models.Model):
+
+    audio_guide = models.ForeignKey(
+        AudioGuide, 
+        on_delete=models.CASCADE, 
+        related_name='track'
+        )
+    
+    url = models.URLField()
+    shortTitle_ru = models.CharField(max_length=255, blank=True)
+    shortTitle_uz = models.CharField(max_length=255, blank=True)
+    fullTitle_ru = models.CharField(max_length=255, blank=True)
+    fullTitle_uz = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+
+class ArchitectBio(models.Model):
+    heritage = models.OneToOneField(
+        HeritageObject, 
+        on_delete=models.CASCADE, 
+        related_name='architectBio'
+        )
+    
+    name_ru = models.CharField(max_length=255)
+    name_uz = models.CharField(max_length=255, blank=True)
+    role_ru = models.CharField(max_length=255, blank=True)
+    role_uz = models.CharField(max_length=255, blank=True)
+    bio_ru = models.TextField(blank=True)
+    bio_uz = models.TextField(blank=True)
+    photoUrl = models.URLField(blank=True)
+
+    milestones = models.ManyToManyField(BiographyMilestone, blank=True)
