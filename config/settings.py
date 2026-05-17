@@ -128,9 +128,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-if not DEBUG:
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'          # dev only
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -182,23 +182,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# ====================== MEDIA & CDN ======================
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# CDN (если используете)
-MEDIA_BASE_URL = os.getenv('MEDIA_BASE_URL', '')  # Например: https://cdn.example.com
-
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
