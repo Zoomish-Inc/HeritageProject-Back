@@ -9,6 +9,7 @@ from .models import (
     AudioGuide,
     AudioGuideTrack,
     ArchitectBio,
+    BiographyMilestone,
 )
 
 class ArchitectureDetailInline(admin.TabularInline):
@@ -32,7 +33,7 @@ class BeforeAfterPairInline(admin.TabularInline):
     )
 
 
-class HistoricalFigureInline(admin.TabularInline):
+class HistoricalFigureInline(admin.StackedInline):
     model = HistoricalFigure
     extra = 1
     fields = (
@@ -47,6 +48,7 @@ class HistoricalFigureInline(admin.TabularInline):
 
 class PhotoItemInline(admin.TabularInline):
     model = PhotoItem
+    fk_name = 'heritage'
     extra = 1
     fields = (
         'order',
@@ -56,6 +58,20 @@ class PhotoItemInline(admin.TabularInline):
         'isHistorical',
         'year',
         'sourceUrl',
+    )
+
+class HistoryMediaInline(admin.TabularInline):
+    model = PhotoItem
+    fk_name = 'heritage_history_media'
+    extra = 1
+    verbose_name = "Историческое медиа"
+    fields = (
+        'order',
+        'url',
+        'caption_ru',
+        'caption_uz',
+        'isHistorical',
+        'year',
     )
 
 
@@ -102,7 +118,7 @@ class HeritageObjectAdmin(admin.ModelAdmin):
             'fields': (
                 'name_ru', 'name_uz',
                 'formerName_ru', 'formerName_uz',
-                'slug', 'isPublished', 'order', 'coverImageUrl'
+                'slug', 'order', 'coverImageUrl'
             )
         }),
         ('Назначение и адрес', {
@@ -141,7 +157,8 @@ class HeritageObjectAdmin(admin.ModelAdmin):
         HistoricalFigureInline,
         PhotoItemInline,
         AudioGuideInline,
-        ArchitectBio,
+        ArchitectBioInline,
+        HistoryMediaInline,
     ]
     
     # Автоматический slug
