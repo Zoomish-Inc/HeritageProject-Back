@@ -19,7 +19,7 @@ class ApiResponseMixin:
 
 class HeritageListView(APIView, ApiResponseMixin):
     def get(self, request):
-        queryset = HeritageObject.objects.filter(is_published=True).order_by('order')[:6]
+        queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')[:6]
         serializer = HeritageListItemSerializer(queryset, many=True, context={'request': request})
         return self.get_response(data=serializer.data)
 
@@ -29,10 +29,10 @@ class HeritageDetailView(APIView, ApiResponseMixin):
         try:
             # Пытаемся определить, является ли identifier UUID
             uuid_obj = UUID(str(identifier))          # str() на случай, если передан UUID объект
-            obj = get_object_or_404(HeritageObject, pk=uuid_obj, is_published=True)
+            obj = get_object_or_404(HeritageObject, pk=uuid_obj, isPublished=True)
         except (ValueError, TypeError):
             # Если не UUID — ищем по slug
-            obj = get_object_or_404(HeritageObject, slug=identifier, is_published=True)
+            obj = get_object_or_404(HeritageObject, slug=identifier, isPublished=True)
 
         serializer = HeritageObjectSerializer(obj, context={'request': request})
         return self.get_response(data=serializer.data)
