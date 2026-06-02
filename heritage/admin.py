@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html
 from .models import (
     HeritageObject,
@@ -208,7 +208,7 @@ class HeritageObjectAdmin(admin.ModelAdmin):
         
         # Если проверку прошли - сохраняем
         super().save_model(request, obj, form, change)
-        self.message_user.success(request, '✅ Объект сохранен')
+        self.message_user(request, '✅ Объект сохранен', level=messages.SUCCESS)
 
 # Регистрируем остальные модели (для прямого редактирования)
 admin.site.register(ArchitectureDetail)
