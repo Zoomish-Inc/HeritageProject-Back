@@ -127,6 +127,9 @@ TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
 
+# drf-spectacular does not care about i18n; keep defaults.
+
+
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -142,6 +145,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+from .schema_settings import SPECTACULAR_BASE as SPECTACULAR_SETTINGS
+
+
+
 
 # ====================== CORS (front) ======================
 CORS_ALLOW_CREDENTIALS = True

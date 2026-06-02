@@ -63,21 +63,25 @@ class HeritageObject(models.Model):
         return self.name_ru
 
     def save(self, *args, **kwargs):
+        # Ensure slug is generated before validation/publishing logic.
+        if not self.slug and self.name_ru:
+            self.slug = slugify(self.name_ru)
+
+        # Publishing limit logic (only if object is being published)
         if self.isPublished:
-            published_count = HeritageObject.objects.filter(
-                isPublished=True
-            ).exclude(pk=self.pk).count()
-            
+            published_count = HeritageObject.objects.filter(isPublished=True).exclude(pk=self.pk).count()
             if published_count >= 6:
                 raise ValidationError(
                     'Нельзя опубликовать больше 6 объектов. '
                     'Сначала снимите публикацию с другого объекта.'
                 )
 
-        if not self.slug:
-            self.slug = slugify(self.name_ru)
+        super().save(*args, **kwargs)
+
 
 class HeritageListItem(models.Model):
+    """DEPRECATED: list API должен использовать HeritageObject, а не этот дубликат."""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -134,14 +138,15 @@ class ArchitectureDetail(models.Model):
 
 class BeforeAfterPair(models.Model):
     """Пара "Было / Стало" """
-    
+
+
     heritage_object = models.ForeignKey(
         'HeritageObject',
         on_delete=models.CASCADE,
         related_name='beforeAfterPairs',
-        verbose_name="Объект наследия"
+        verbose_name="Объект наследия",
     )
-    
+
     label_ru = models.CharField("Название пары (RU)", max_length=255, blank=True)
     label_uz = models.CharField("Название пары (UZ)", max_length=255, blank=True)
 
@@ -149,42 +154,35 @@ class BeforeAfterPair(models.Model):
         'media_files.MediaFile',
         on_delete=models.CASCADE,
         related_name='before_pairs',
-        verbose_name="Фото 'Было'"
+        verbose_name="Фото 'Было'",
     )
 
     after = models.ForeignKey(
         'media_files.MediaFile',
         on_delete=models.CASCADE,
         related_name='after_pairs',
-        verbose_name=("Фото 'Стало'")
+        verbose_name="Фото 'Стало'",
     )
 
-    year_before = models.PositiveIntegerField(("Год 'Было'"), null=True, blank=True)
-    year_after = models.PositiveIntegerField(("Год 'Стало'"), null=True, blank=True)
+    year_before = models.PositiveIntegerField("Год 'Было'", null=True, blank=True)
+    year_after = models.PositiveIntegerField("Год 'Стало'", null=True, blank=True)
 
-    description_ru = models.TextField(("Описание (RU)"), blank=True)
-    description_uz = models.TextField(("Описание (UZ)"), blank=True)
+    description_ru = models.TextField("Описание (RU)", blank=True)
+    description_uz = models.TextField("Описание (UZ)", blank=True)
 
-    sort_order = models.PositiveIntegerField(("Порядок"), default=0)
-
-    class Meta:
-        ordering = ['sort_order']
-        verbose_name = ("Пара Было/Стало")
-        verbose_name_plural = ("Пары Было/Стало")
-
-    def __str__(self):
-        return self.title_ru or str(self.heritage_object)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:
         ordering = ['sort_order']
-        verbose_name = ("Пара Было/Стало")
-        verbose_name_plural = ("Пары Было/Стало")
+        verbose_name = "Пара Было/Стало"
+        verbose_name_plural = "Пары Было/Стало"
 
     def __str__(self):
-        return self.title_ru or f"Пара для {self.heritage_object}"
+        return self.label_ru or str(self.heritage_object)
 
 
 class HistoricalFigure(models.Model):
+
 
     heritage = models.ForeignKey(
         HeritageObject, 
