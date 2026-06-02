@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (
     HeritageObject,
     HeritageListItem,
+
     BiographyMilestone,
     ArchitectureDetail,
     BeforeAfterPair,
@@ -13,8 +14,9 @@ from .models import (
 )
 
 
-class LocalizedStringField(serializers.SerializerMethodField):
+class LocalizedStringField(serializers.Field):
     """Превращает *_ru / *_uz поля в {"ru": "...", "uz": "..."}"""
+
     def __init__(self, ru_field: str, uz_field: str, **kwargs):
         self.ru_field = ru_field
         self.uz_field = uz_field
@@ -25,6 +27,7 @@ class LocalizedStringField(serializers.SerializerMethodField):
             'ru': getattr(obj, self.ru_field, ''),
             'uz': getattr(obj, self.uz_field, ''),
         }
+
 
 
 # ====================== Вложенные сериализаторы ======================
@@ -149,7 +152,7 @@ class ArchitectBioSerializer(serializers.ModelSerializer):
 
 # ====================== Основные сериализаторы ======================
 
-class HeritageListItemSerializer(serializers.ModelSerializer):
+class HeritageObjectListSerializer(serializers.ModelSerializer):
     name = LocalizedStringField(ru_field='name_ru', uz_field='name_uz')
     address = LocalizedStringField(ru_field='address_ru', uz_field='address_uz')
     short_description = LocalizedStringField(ru_field='shortDescription_ru', uz_field='shortDescription_uz')
@@ -157,7 +160,8 @@ class HeritageListItemSerializer(serializers.ModelSerializer):
     cover = serializers.SerializerMethodField()
 
     class Meta:
-        model = HeritageListItem
+        model = HeritageObject
+
         fields = [
             'id', 'slug', 'name', 'yearRange', 'address',
             'short_description', 'cover', 'order', 'isPublished'
@@ -190,7 +194,8 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
     architecture_details = ArchitectureDetailSerializer(many=True, read_only=True, source='architectureDetails')
     before_after_pairs = BeforeAfterPairSerializer(many=True, read_only=True, source='beforeAfterPairs')
     historical_figures = HistoricalFigureSerializer(many=True, read_only=True, source='historicalFigures')
-    photos = PhotoItemSerializer(many=True, read_only=True, source='photos')
+    photos = PhotoItemSerializer(many=True, read_only=True)
+
     audio_guide = AudioGuideSerializer(read_only=True, source='audioGuide')
     architect_bio = ArchitectBioSerializer(read_only=True, source='architectBio')
 

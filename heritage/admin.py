@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html
 from .models import (
     HeritageObject,
@@ -208,13 +208,19 @@ class HeritageObjectAdmin(admin.ModelAdmin):
         
         # Если проверку прошли - сохраняем
         super().save_model(request, obj, form, change)
-        self.message_user.success(request, '✅ Объект сохранен')
+        self.message_user(request, '✅ Объект сохранен', level=messages.SUCCESS)
 
-# Регистрируем остальные модели (для прямого редактирования)
-admin.site.register(ArchitectureDetail)
-admin.site.register(BeforeAfterPair)
-admin.site.register(HistoricalFigure)
-admin.site.register(PhotoItem)
-admin.site.register(AudioGuide)
-admin.site.register(AudioGuideTrack)
-admin.site.register(ArchitectBio)
+        # DEBUG в stdout сервера
+        try:
+            print(f"[ADMIN] save_model HeritageObject pk={getattr(obj, 'pk', None)} isPublished={obj.isPublished} slug={obj.slug}")
+        except Exception:
+            pass
+
+
+
+
+
+# Остальные модели используются через inlines.
+# Их отдельная регистрация в admin может ломать workflow сохранения/редиректов.
+# Поэтому убираем отдельные registration.
+

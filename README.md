@@ -2,6 +2,7 @@
 
 ### Требования
 
+
 - Python 3.11 или выше
 - PostgreSQL (локально или Docker)
 - Redis (опционально, для кеширования/задач)
@@ -33,3 +34,16 @@ python seed.py
 
 # 7. Запустить сервер разработки
 python manage.py runserver
+```
+
+### Как обновлять OpenAPI схему (`openapi.yaml`) при изменении serializers
+Проект использует **drf-spectacular**. Файл `openapi.yaml` хранится в репозитории и генерируется автоматически.
+
+После правок в `views/serializers` обновляйте схему командой из корня проекта:
+
+```bash
+python manage.py spectacular --file openapi.yaml
+```
+
+После этого закоммитьте обновлённый `openapi.yaml`.
+

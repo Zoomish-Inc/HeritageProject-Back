@@ -1,0 +1,616 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /api/app:
+    get:
+      operationId: app_retrieve
+      tags:
+      - app
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeritageObject'
+          description: ''
+  /api/schema/openapi.yaml:
+    get:
+      operationId: schema_openapi.yaml_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/health/:
+    get:
+      operationId: v1_health_retrieve
+      description: |-
+        Health check endpoint for monitoring and Render.com
+        Checks database connectivity with SELECT 1.
+        Returns 200 OK if healthy, 503 if database is down.
+        No caching - response is never cached.
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/healthz/:
+    get:
+      operationId: v1_healthz_retrieve
+      description: |-
+        Health check endpoint for monitoring and Render.com
+        Checks database connectivity with SELECT 1.
+        Returns 200 OK if healthy, 503 if database is down.
+        No caching - response is never cached.
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/heritage/:
+    get:
+      operationId: v1_heritage_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeritageObjectList'
+          description: ''
+  /api/v1/heritage/{slug}/:
+    get:
+      operationId: v1_heritage_retrieve_2
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeritageObject'
+          description: ''
+components:
+  schemas:
+    ArchitectBio:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bio:
+          type: string
+        photoUrl:
+          type: string
+          format: uri
+          maxLength: 200
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiographyMilestone'
+          readOnly: true
+      required:
+      - bio
+      - milestones
+      - name
+      - role
+    ArchitectureDetail:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+          readOnly: true
+        image_credit:
+          type: string
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - description
+      - image
+      - image_credit
+      - title
+    AudioGuide:
+      type: object
+      properties:
+        narrator_label:
+          type: string
+        transcript:
+          type: string
+        atmosphere_description:
+          type: string
+        music_suggestion:
+          type: string
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AudioGuideTrack'
+          readOnly: true
+      required:
+      - atmosphere_description
+      - music_suggestion
+      - narrator_label
+      - tracks
+      - transcript
+    AudioGuideTrack:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        short_title:
+          type: string
+        full_title:
+          type: string
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - full_title
+      - short_title
+      - url
+    BeforeAfterPair:
+      type: object
+      properties:
+        title:
+          type: string
+        before_image:
+          type: string
+          readOnly: true
+        after_image:
+          type: string
+          readOnly: true
+        year_before:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Год 'Было'
+        year_after:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Год 'Стало'
+        description:
+          type: string
+        sort_order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+      required:
+      - after_image
+      - before_image
+      - description
+      - title
+    BiographyMilestone:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        event:
+          type: string
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - event
+      - year
+    HeritageObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+        former_name:
+          type: string
+        current_purpose:
+          type: string
+        historical_purpose:
+          type: string
+        address:
+          type: string
+        lat:
+          type: number
+          format: double
+          nullable: true
+        lng:
+          type: number
+          format: double
+          nullable: true
+        mapUrl:
+          type: string
+          format: uri
+          maxLength: 200
+        yearBuilt:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+        yearRange:
+          type: string
+          maxLength: 50
+        year_built_label:
+          type: string
+        architectural_style:
+          type: string
+        architect:
+          type: string
+        architectural_description:
+          type: string
+        history:
+          type: string
+        short_description:
+          type: string
+        visual_style_notes:
+          type: string
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        isPublished:
+          type: boolean
+        tourPublished:
+          type: boolean
+        tourEntryUrl:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+        cover:
+          type: string
+          readOnly: true
+        architecture_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArchitectureDetail'
+          readOnly: true
+        before_after_pairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BeforeAfterPair'
+          readOnly: true
+        historical_figures:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoricalFigure'
+          readOnly: true
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhotoItem'
+          readOnly: true
+        audio_guide:
+          allOf:
+          - $ref: '#/components/schemas/AudioGuide'
+          readOnly: true
+        architect_bio:
+          allOf:
+          - $ref: '#/components/schemas/ArchitectBio'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - address
+      - architect
+      - architect_bio
+      - architectural_description
+      - architectural_style
+      - architecture_details
+      - audio_guide
+      - before_after_pairs
+      - cover
+      - created_at
+      - current_purpose
+      - former_name
+      - historical_figures
+      - historical_purpose
+      - history
+      - id
+      - name
+      - photos
+      - short_description
+      - updated_at
+      - visual_style_notes
+      - year_built_label
+    HeritageObjectList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+        yearRange:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+        short_description:
+          type: string
+        cover:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        isPublished:
+          type: boolean
+      required:
+      - address
+      - cover
+      - id
+      - name
+      - short_description
+    HistoricalFigure:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bio:
+          type: string
+        photo:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiographyMilestone'
+          readOnly: true
+      required:
+      - bio
+      - milestones
+      - name
+      - photo
+      - role
+    PhotoItem:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 200
+        caption:
+          type: string
+        credit:
+          type: string
+        isHistorical:
+          type: boolean
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - caption
+      - credit
+      - url
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

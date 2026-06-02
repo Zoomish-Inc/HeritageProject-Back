@@ -1,8 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.shortcuts import get_object_or_404
-from uuid import UUID
 from django.db import connections
 from django.db.utils import OperationalError
 from rest_framework.decorators import api_view, permission_classes
@@ -10,39 +8,51 @@ from rest_framework.permissions import AllowAny
 from django.views.decorators.cache import never_cache
 
 from .models import HeritageObject
-from .serializers import HeritageListItemSerializer, HeritageObjectSerializer
+from .serializers import HeritageObjectSerializer, HeritageObjectListSerializer
 
 
 class ApiResponseMixin:
     def get_response(self, data=None, success=True, message=None, status_code=200):
-        return Response({
-            'success': success,
-            'data': data,
-            'message': message,
-        }, status=status_code)
+        return Response(
+            {
+                'success': success,
+                'data': data,
+                'message': message,
+            },
+            status=status_code,
+        )
 
 
 class HeritageListView(APIView, ApiResponseMixin):
+    serializer_class = HeritageObjectListSerializer
+
     def get(self, request):
         queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')[:6]
-        serializer = HeritageListItemSerializer(queryset, many=True, context={'request': request})
+        serializer = self.serializer_class(queryset, many=True, context={'request': request})
         return self.get_response(data=serializer.data)
 
 
 class HeritageDetailView(APIView, ApiResponseMixin):
-    def get(self, request, identifier):
-        try:
-            # Пытаемся определить, является ли identifier UUID
-            uuid_obj = UUID(str(identifier))          # str() на случай, если передан UUID объект
-            obj = get_object_or_404(HeritageObject, pk=uuid_obj, isPublished=True)
-        except (ValueError, TypeError):
-            # Если не UUID — ищем по slug
-            obj = get_object_or_404(HeritageObject, slug=identifier, isPublished=True)
+    serializer_class = HeritageObjectSerializer
 
-        serializer = HeritageObjectSerializer(obj, context={'request': request})
+    def get(self, request, slug):
+        obj = HeritageObject.objects.filter(slug=slug, isPublished=True).first()
+        if obj is None:
+            return self.get_response(
+                data=None,
+                success=False,
+                message='not_found',
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = self.serializer_class(obj, context={'request': request})
         return self.get_response(data=serializer.data)
-    
+
+
 class AppView(APIView, ApiResponseMixin):
+    # Для drf-spectacular: serializer опционален, поэтому задаём хотя бы dummy.
+    serializer_class = HeritageObjectSerializer
+
     def get(self, request):
         return self.get_response(
             data='pong',
