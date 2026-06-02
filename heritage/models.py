@@ -63,9 +63,9 @@ class HeritageObject(models.Model):
         return self.name_ru
 
     def save(self, *args, **kwargs):
-        if self.is_published:
+        if self.isPublished:
             published_count = HeritageObject.objects.filter(
-                is_published=True
+                isPublished=True
             ).exclude(pk=self.pk).count()
             
             if published_count >= 6:
