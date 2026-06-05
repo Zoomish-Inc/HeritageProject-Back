@@ -1,6 +1,3 @@
-from drf_spectacular.contrib.rest_framework_simplejwt import SpectacularSwaggerAutoSchema
-
-
 SPECTACULAR_BASE = {
     # Conventions: backend returns snake_case
     'COMPONENT_SPLIT_REQUEST': True,

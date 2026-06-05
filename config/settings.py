@@ -138,6 +138,32 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'          # dev only
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ====================== CACHE (Redis) ======================
+CACHE_ENV = os.getenv('ENVIRONMENT', 'dev').strip().lower()
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 2,
+                'SOCKET_TIMEOUT': 2,
+                'IGNORE_EXCEPTIONS': True,
+            },
+            'KEY_PREFIX': f'{CACHE_ENV}:heritage',
+            'TIMEOUT': 3600,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
 # ====================== REST Framework ======================
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',

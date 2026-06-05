@@ -9,11 +9,12 @@ from django.views.decorators.cache import never_cache
 
 from .models import HeritageObject
 from .serializers import HeritageObjectSerializer, HeritageObjectListSerializer
+from . import cache_service
 
 
 class ApiResponseMixin:
-    def get_response(self, data=None, success=True, message=None, status_code=200):
-        return Response(
+    def get_response(self, data=None, success=True, message=None, status_code=200, cache_status=None):
+        response = Response(
             {
                 'success': success,
                 'data': data,
@@ -21,15 +22,22 @@ class ApiResponseMixin:
             },
             status=status_code,
         )
+        if cache_status:
+            response['X-Cache'] = cache_status
+        return response
 
 
 class HeritageListView(APIView, ApiResponseMixin):
     serializer_class = HeritageObjectListSerializer
 
     def get(self, request):
-        queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')[:6]
-        serializer = self.serializer_class(queryset, many=True, context={'request': request})
-        return self.get_response(data=serializer.data)
+        def load():
+            queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')[:6]
+            serializer = self.serializer_class(queryset, many=True, context={'request': request})
+            return serializer.data
+
+        data, cache_status = cache_service.get_or_compute(cache_service.LIST_KEY, load)
+        return self.get_response(data=data, cache_status=cache_status)
 
 
 class HeritageDetailView(APIView, ApiResponseMixin):
@@ -45,8 +53,12 @@ class HeritageDetailView(APIView, ApiResponseMixin):
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer = self.serializer_class(obj, context={'request': request})
-        return self.get_response(data=serializer.data)
+        def load():
+            serializer = self.serializer_class(obj, context={'request': request})
+            return serializer.data
+
+        data, cache_status = cache_service.get_or_compute(cache_service.detail_key(slug), load)
+        return self.get_response(data=data, cache_status=cache_status)
 
 
 class AppView(APIView, ApiResponseMixin):
