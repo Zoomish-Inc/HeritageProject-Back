@@ -33,6 +33,8 @@ cp .env.example .env
 |------------|----------|--------|
 | `REDIS_URL` | URL Redis (Render Key Value / локальный Redis) | `redis://localhost:6379/0` |
 | `ENVIRONMENT` | Префикс ключей кэша `{env}:heritage:...` | `dev`, `production` |
+| `DATABASE_URL` | PostgreSQL (Aiven / Render) | `postgres://...` |
+| `FRONTEND_BASE_URL` | Базовый URL для `/images/...` при seed | `https://heritage-project-front.vercel.app` |
 
 Без `REDIS_URL` API работает как раньше — данные читаются из PostgreSQL/SQLite.
 
@@ -42,8 +44,8 @@ cp .env.example .env
 # 5. Применить миграции
 python manage.py migrate
 
-# 6. Загрузить начальные данные (опционально, но полезно)
-python seed.py
+# 6. Загрузить моковые данные (опционально, для первого деплоя)
+python manage.py seed_mock_heritage
 
 # 7. Запустить сервер разработки
 python manage.py runserver

@@ -71,6 +71,8 @@ class BeforeAfterPairSerializer(serializers.ModelSerializer):
                   'year_before', 'year_after', 'description', 'sort_order']
 
     def get_before_image(self, obj):
+        if getattr(obj.before, 'source', None):
+            return obj.before.source
         if getattr(obj.before, 'file', None):
             request = self.context.get('request')
             url = obj.before.file.url
@@ -78,6 +80,8 @@ class BeforeAfterPairSerializer(serializers.ModelSerializer):
         return None
 
     def get_after_image(self, obj):
+        if getattr(obj.after, 'source', None):
+            return obj.after.source
         if getattr(obj.after, 'file', None):
             request = self.context.get('request')
             url = obj.after.file.url

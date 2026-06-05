@@ -114,12 +114,38 @@ LOGGING = {
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # ====================== DATABASE =======================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+
+if DATABASE_URL:
+    from urllib.parse import urlparse, parse_qs
+
+    db_url = urlparse(DATABASE_URL)
+    query = parse_qs(db_url.query)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_url.path.lstrip('/'),
+            'USER': db_url.username,
+            'PASSWORD': db_url.password,
+            'HOST': db_url.hostname,
+            'PORT': db_url.port or 5432,
+            'OPTIONS': {
+                'sslmode': query.get('sslmode', ['require'])[0],
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+FRONTEND_BASE_URL = os.getenv(
+    'FRONTEND_BASE_URL',
+    'https://heritage-project-front.vercel.app',
+).strip()
 
 # ====================== LOCALIZATION & STATIC =======================
 LANGUAGE_CODE = 'ru'
