@@ -20,7 +20,11 @@ class LocalizedStringField(serializers.Field):
     def __init__(self, ru_field: str, uz_field: str, **kwargs):
         self.ru_field = ru_field
         self.uz_field = uz_field
+        kwargs.setdefault('read_only', True)
         super().__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        return instance
 
     def to_representation(self, obj):
         return {
