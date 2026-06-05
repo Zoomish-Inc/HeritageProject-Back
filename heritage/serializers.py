@@ -164,6 +164,7 @@ class HeritageObjectListSerializer(serializers.ModelSerializer):
     name = LocalizedStringField(ru_field='name_ru', uz_field='name_uz')
     address = LocalizedStringField(ru_field='address_ru', uz_field='address_uz')
     short_description = LocalizedStringField(ru_field='shortDescription_ru', uz_field='shortDescription_uz')
+    year_built = serializers.IntegerField(source='yearBuilt', allow_null=True, read_only=True)
 
     cover = serializers.SerializerMethodField()
 
@@ -171,7 +172,7 @@ class HeritageObjectListSerializer(serializers.ModelSerializer):
         model = HeritageObject
 
         fields = [
-            'id', 'slug', 'name', 'yearRange', 'address',
+            'id', 'slug', 'name', 'year_built', 'yearRange', 'address',
             'short_description', 'cover', 'order', 'isPublished'
         ]
 
@@ -194,6 +195,7 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
     history = LocalizedStringField(ru_field='history_ru', uz_field='history_uz')
     short_description = LocalizedStringField(ru_field='shortDescription_ru', uz_field='shortDescription_uz')
     year_built_label = LocalizedStringField(ru_field='yearBuiltLabel_ru', uz_field='yearBuiltLabel_uz')
+    year_built = serializers.IntegerField(source='yearBuilt', allow_null=True, read_only=True)
     visual_style_notes = LocalizedStringField(ru_field='visualStyleNotes_ru', uz_field='visualStyleNotes_uz')
 
     cover = serializers.SerializerMethodField()
@@ -213,7 +215,7 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
             'id', 'slug', 'name', 'former_name',
             'current_purpose', 'historical_purpose',
             'address', 'lat', 'lng', 'mapUrl',
-            'yearBuilt', 'yearRange', 'year_built_label',
+            'year_built', 'yearRange', 'year_built_label',
             'architectural_style', 'architect',
             'architectural_description', 'history',
             'short_description', 'visual_style_notes',

@@ -7,14 +7,14 @@ from django.core.cache import cache
 logger = logging.getLogger(__name__)
 
 CACHE_TTL = 3600
-LIST_KEY = 'list:v1'
+LIST_KEY = 'list:v2'
 LOCK_TIMEOUT = 30
 LOCK_WAIT_RETRIES = 5
 LOCK_WAIT_SECONDS = 0.1
 
 
 def detail_key(slug: str) -> str:
-    return f'detail:{slug}:v1'
+    return f'detail:{slug}:v2'
 
 
 def _lock_key(key: str) -> str:
