@@ -16,6 +16,7 @@ from .serializers import (
 )
 from . import cache_service
 from .db_keepalive import ping_database
+from .http_cache import apply_public_cache_headers, not_modified_if_etag_matches
 
 
 class ApiResponseMixin:
@@ -32,6 +33,19 @@ class ApiResponseMixin:
             response['X-Cache'] = cache_status
         return response
 
+    def get_cached_response(self, request, data, cache_status=None, status_code=200):
+        not_modified = not_modified_if_etag_matches(request, data)
+        if not_modified is not None:
+            not_modified['X-Cache'] = cache_status or 'MISS'
+            return not_modified
+
+        response = self.get_response(
+            data=data,
+            status_code=status_code,
+            cache_status=cache_status,
+        )
+        return apply_public_cache_headers(response, data)
+
 
 class HeritageListView(APIView, ApiResponseMixin):
     serializer_class = HeritageObjectListSerializer
@@ -43,7 +57,7 @@ class HeritageListView(APIView, ApiResponseMixin):
             return serializer.data
 
         data, cache_status = cache_service.get_or_compute(cache_service.LIST_KEY, load)
-        return self.get_response(data=data, cache_status=cache_status)
+        return self.get_cached_response(request, data, cache_status=cache_status)
 
 
 class HeritageDetailView(APIView, ApiResponseMixin):
@@ -64,7 +78,7 @@ class HeritageDetailView(APIView, ApiResponseMixin):
             return serializer.data
 
         data, cache_status = cache_service.get_or_compute(cache_service.detail_key(slug), load)
-        return self.get_response(data=data, cache_status=cache_status)
+        return self.get_cached_response(request, data, cache_status=cache_status)
 
 
 class TourPackManifestView(APIView, ApiResponseMixin):

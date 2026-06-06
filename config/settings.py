@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'heritage.middleware.PublicApiRateLimitMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -225,6 +226,7 @@ from .schema_settings import SPECTACULAR_BASE as SPECTACULAR_SETTINGS
 
 
 # ====================== CORS (front) ======================
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -273,6 +275,15 @@ else:
     CORS_ALLOWED_ORIGIN_REGEXES = [
         r'^https://[\w-]+\.vercel\.app$',
     ]
+
+# ====================== PUBLIC API (BE-19) ======================
+HERITAGE_HTTP_CACHE_MAX_AGE = int(os.getenv('HERITAGE_HTTP_CACHE_MAX_AGE', '3600'))
+API_RATE_LIMIT_PER_MINUTE = int(os.getenv('API_RATE_LIMIT_PER_MINUTE', '120'))
+API_RATE_LIMIT_ENABLED = os.getenv('API_RATE_LIMIT_ENABLED', 'true').lower() in (
+    'true',
+    '1',
+    'yes',
+)
 
 # ====================== FILES ======================
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'

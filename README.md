@@ -36,6 +36,11 @@ cp .env.example .env
 | `DATABASE_URL` | PostgreSQL (Aiven / Render) | `postgres://...` |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Aiven PostgreSQL (альтернатива DATABASE_URL) | см. Aiven Console |
 | `VERCEL_DEPLOY_HOOK_URL` | Deploy Hook URL фронтенда на Vercel | `https://api.vercel.com/v1/integrations/deploy/...` |
+| `CORS_ALLOWED_ORIGINS` | Whitelist origin фронта (через запятую) | `https://heritage-project-front.vercel.app` |
+| `CORS_ALLOWED_ORIGIN_REGEXES` | Regex для preview-доменов Vercel | `^https://[\w-]+\.vercel\.app$` |
+| `HERITAGE_HTTP_CACHE_MAX_AGE` | `Cache-Control: max-age` для GET list/detail | `3600` |
+| `API_RATE_LIMIT_PER_MINUTE` | Лимит публичных GET на IP в минуту | `120` |
+| `API_RATE_LIMIT_ENABLED` | Включить rate limit (`false` в dev) | `true` |
 
 Без `REDIS_URL` API работает как раньше — данные читаются из PostgreSQL/SQLite.
 
@@ -70,6 +75,23 @@ python manage.py spectacular --file openapi.yaml
 ```bash
 curl -i http://127.0.0.1:8000/api/v1/heritage/
 ```
+
+### Cache-Control, CORS, rate limit (BE-19)
+
+**CORS:** в production не используется `*`. Задайте `CORS_ALLOWED_ORIGINS` и/или `CORS_ALLOWED_ORIGIN_REGEXES` на Render. По умолчанию разрешены production/preview Vercel и `localhost:3000`.
+
+**HTTP-кеш list/detail:**
+
+- `Cache-Control: public, max-age=3600, must-revalidate`
+- `ETag` — клиент может слать `If-None-Match` и получить `304`
+- `X-Cache: HIT|MISS` — Redis-кеш бэкенда (BE-18)
+
+```bash
+curl -i http://127.0.0.1:8000/api/v1/heritage/
+curl -i http://127.0.0.1:8000/api/v1/heritage/ -H "If-None-Match: \"...\""
+```
+
+**Rate limit:** публичные GET `/api/v1/heritage/` и `/api/v1/tour-packs/` — по умолчанию 120 req/min на IP → `429` с `{ "success": false, "message": "rate_limit_exceeded" }`. Health и `/api/app` не лимитируются.
 
 ### 3D-туры (Google Drive)
 
