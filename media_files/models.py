@@ -27,7 +27,7 @@ class MediaFile(models.Model):
 
     # Дополнительная информация
     year = models.PositiveIntegerField(_("Год"), null=True, blank=True)
-    source = models.CharField(_("Источник"), max_length=500, blank=True)
+    source = models.CharField(_("Источник"), max_length=2048, blank=True)
 
     # Сортировка
     sort_order = models.PositiveIntegerField(_("Порядок сортировки"), default=0)

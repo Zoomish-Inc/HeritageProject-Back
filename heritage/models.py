@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 import uuid
 
+URL_MAX_LENGTH = 2048
+
 
 class HeritageObject(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -26,7 +28,7 @@ class HeritageObject(models.Model):
     lat = models.FloatField(null=True, blank=True)
     lng = models.FloatField(null=True, blank=True)
 
-    mapUrl = models.URLField(blank=True)
+    mapUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
 
     yearBuilt = models.IntegerField(null=True, blank=True)
     yearRange = models.CharField(max_length=50, blank=True)
@@ -45,13 +47,13 @@ class HeritageObject(models.Model):
     history_ru = models.TextField(blank=True)
     history_uz = models.TextField(blank=True)
 
-    coverImageUrl = models.URLField(blank=True)
+    coverImageUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
     visualStyleNotes_ru = models.TextField(blank=True)
     visualStyleNotes_uz = models.TextField(blank=True)
 
     isPublished = models.BooleanField(default=False)
     tourPublished = models.BooleanField(default=False)
-    tourEntryUrl = models.URLField(blank=True, null=True)
+    tourEntryUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -90,7 +92,7 @@ class HeritageListItem(models.Model):
     yearRange = models.CharField(max_length=50, blank=True)
     address_ru = models.CharField(max_length=255, blank=True)
     address_uz = models.CharField(max_length=255, blank=True)
-    coverImageUrl = models.URLField(blank=True)
+    coverImageUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
     shortDescription_ru = models.CharField(max_length=255, blank=True)
     shortDescription_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -126,8 +128,8 @@ class ArchitectureDetail(models.Model):
     title_uz = models.CharField(max_length=255, blank=True)
     description_ru = models.TextField(blank=True)
     description_uz = models.TextField(blank=True)
-    imageUrl = models.URLField(blank=True)
-    imageSourceUrl = models.URLField(blank=True)
+    imageUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
+    imageSourceUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
     imageCredit_ru = models.CharField(max_length=255, blank=True)
     imageCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -196,8 +198,8 @@ class HistoricalFigure(models.Model):
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photoUrl = models.URLField(blank=True)
-    bioSourceUrl = models.URLField(blank=True)
+    photoUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
+    bioSourceUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
     bioSourceCredit_ru = models.CharField(max_length=255, blank=True)
     bioSourceCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -224,12 +226,12 @@ class PhotoItem(models.Model):
         null=True
     )
     
-    url = models.URLField()
+    url = models.URLField(max_length=URL_MAX_LENGTH)
     caption_ru = models.CharField(max_length=255, blank=True)
     caption_uz = models.CharField(max_length=255, blank=True)
     isHistorical = models.BooleanField(default=False)
     year = models.IntegerField(blank=True)
-    sourceUrl = models.URLField(blank=True)
+    sourceUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
     credit_ru = models.CharField(max_length=255, blank=True)
     credit_uz = models.CharField(max_length=255, blank=True)
 
@@ -266,7 +268,7 @@ class AudioGuideTrack(models.Model):
         related_name='track'
         )
     
-    url = models.URLField()
+    url = models.URLField(max_length=URL_MAX_LENGTH)
     shortTitle_ru = models.CharField(max_length=255, blank=True)
     shortTitle_uz = models.CharField(max_length=255, blank=True)
     fullTitle_ru = models.CharField(max_length=255, blank=True)
@@ -287,7 +289,7 @@ class ArchitectBio(models.Model):
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photoUrl = models.URLField(blank=True)
+    photoUrl = models.URLField(max_length=URL_MAX_LENGTH, blank=True)
 
     milestones = models.ManyToManyField(BiographyMilestone, blank=True)
 
