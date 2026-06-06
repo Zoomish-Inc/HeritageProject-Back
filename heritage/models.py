@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 import uuid
 
+from heritage.fields import FlexibleUrlField
+from heritage.tour_packs import normalize_google_drive_file_id
+
 
 class HeritageObject(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -26,7 +29,7 @@ class HeritageObject(models.Model):
     lat = models.FloatField(null=True, blank=True)
     lng = models.FloatField(null=True, blank=True)
 
-    mapUrl = models.URLField(blank=True)
+    mapUrl = FlexibleUrlField(blank=True)
 
     yearBuilt = models.IntegerField(null=True, blank=True)
     yearRange = models.CharField(max_length=50, blank=True)
@@ -45,13 +48,19 @@ class HeritageObject(models.Model):
     history_ru = models.TextField(blank=True)
     history_uz = models.TextField(blank=True)
 
-    coverImageUrl = models.URLField(blank=True)
+    coverImageUrl = FlexibleUrlField(blank=True)
     visualStyleNotes_ru = models.TextField(blank=True)
     visualStyleNotes_uz = models.TextField(blank=True)
 
     isPublished = models.BooleanField(default=False)
     tourPublished = models.BooleanField(default=False)
-    tourEntryUrl = models.URLField(blank=True, null=True)
+    tourGoogleDriveFileId = models.CharField(
+        max_length=128,
+        blank=True,
+        help_text='ID файла zip на Google Drive или полная share-ссылка.',
+    )
+    tourPackUpdatedAt = models.DateTimeField(null=True, blank=True)
+    tourEntryUrl = FlexibleUrlField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -62,22 +71,36 @@ class HeritageObject(models.Model):
     def __str__(self):
         return self.name_ru
 
+    def clean(self):
+        super().clean()
+        self.tourGoogleDriveFileId = normalize_google_drive_file_id(self.tourGoogleDriveFileId)
+        if self.tourPublished and not self.tourGoogleDriveFileId:
+            raise ValidationError({
+                'tourGoogleDriveFileId': 'Для опубликованного тура нужен Google Drive file ID.',
+            })
+
     def save(self, *args, **kwargs):
-        if self.is_published:
-            published_count = HeritageObject.objects.filter(
-                is_published=True
-            ).exclude(pk=self.pk).count()
-            
+        # Ensure slug is generated before validation/publishing logic.
+        if not self.slug and self.name_ru:
+            self.slug = slugify(self.name_ru)
+
+        self.tourGoogleDriveFileId = normalize_google_drive_file_id(self.tourGoogleDriveFileId)
+
+        # Publishing limit logic (only if object is being published)
+        if self.isPublished:
+            published_count = HeritageObject.objects.filter(isPublished=True).exclude(pk=self.pk).count()
             if published_count >= 6:
                 raise ValidationError(
                     'Нельзя опубликовать больше 6 объектов. '
                     'Сначала снимите публикацию с другого объекта.'
                 )
 
-        if not self.slug:
-            self.slug = slugify(self.name_ru)
+        super().save(*args, **kwargs)
+
 
 class HeritageListItem(models.Model):
+    """DEPRECATED: list API должен использовать HeritageObject, а не этот дубликат."""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -86,7 +109,7 @@ class HeritageListItem(models.Model):
     yearRange = models.CharField(max_length=50, blank=True)
     address_ru = models.CharField(max_length=255, blank=True)
     address_uz = models.CharField(max_length=255, blank=True)
-    coverImageUrl = models.URLField(blank=True)
+    coverImageUrl = FlexibleUrlField(blank=True)
     shortDescription_ru = models.CharField(max_length=255, blank=True)
     shortDescription_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -122,8 +145,8 @@ class ArchitectureDetail(models.Model):
     title_uz = models.CharField(max_length=255, blank=True)
     description_ru = models.TextField(blank=True)
     description_uz = models.TextField(blank=True)
-    imageUrl = models.URLField(blank=True)
-    imageSourceUrl = models.URLField(blank=True)
+    imageUrl = FlexibleUrlField(blank=True)
+    imageSourceUrl = FlexibleUrlField(blank=True)
     imageCredit_ru = models.CharField(max_length=255, blank=True)
     imageCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -134,57 +157,40 @@ class ArchitectureDetail(models.Model):
 
 class BeforeAfterPair(models.Model):
     """Пара "Было / Стало" """
-    
+
+
     heritage_object = models.ForeignKey(
         'HeritageObject',
         on_delete=models.CASCADE,
         related_name='beforeAfterPairs',
-        verbose_name="Объект наследия"
+        verbose_name="Объект наследия",
     )
-    
+
     label_ru = models.CharField("Название пары (RU)", max_length=255, blank=True)
     label_uz = models.CharField("Название пары (UZ)", max_length=255, blank=True)
 
-    before = models.ForeignKey(
-        'media_files.MediaFile',
-        on_delete=models.CASCADE,
-        related_name='before_pairs',
-        verbose_name="Фото 'Было'"
-    )
+    beforeUrl = FlexibleUrlField("Фото «Было»", blank=True)
+    afterUrl = FlexibleUrlField("Фото «Стало»", blank=True)
 
-    after = models.ForeignKey(
-        'media_files.MediaFile',
-        on_delete=models.CASCADE,
-        related_name='after_pairs',
-        verbose_name=("Фото 'Стало'")
-    )
+    year_before = models.PositiveIntegerField("Год 'Было'", null=True, blank=True)
+    year_after = models.PositiveIntegerField("Год 'Стало'", null=True, blank=True)
 
-    year_before = models.PositiveIntegerField(("Год 'Было'"), null=True, blank=True)
-    year_after = models.PositiveIntegerField(("Год 'Стало'"), null=True, blank=True)
+    description_ru = models.TextField("Описание (RU)", blank=True)
+    description_uz = models.TextField("Описание (UZ)", blank=True)
 
-    description_ru = models.TextField(("Описание (RU)"), blank=True)
-    description_uz = models.TextField(("Описание (UZ)"), blank=True)
-
-    sort_order = models.PositiveIntegerField(("Порядок"), default=0)
+    sort_order = models.PositiveIntegerField("Порядок", default=0)
 
     class Meta:
         ordering = ['sort_order']
-        verbose_name = ("Пара Было/Стало")
-        verbose_name_plural = ("Пары Было/Стало")
+        verbose_name = "Пара Было/Стало"
+        verbose_name_plural = "Пары Было/Стало"
 
     def __str__(self):
-        return self.title_ru or str(self.heritage_object)
-
-    class Meta:
-        ordering = ['sort_order']
-        verbose_name = ("Пара Было/Стало")
-        verbose_name_plural = ("Пары Было/Стало")
-
-    def __str__(self):
-        return self.title_ru or f"Пара для {self.heritage_object}"
+        return self.label_ru or str(self.heritage_object)
 
 
 class HistoricalFigure(models.Model):
+
 
     heritage = models.ForeignKey(
         HeritageObject, 
@@ -198,8 +204,8 @@ class HistoricalFigure(models.Model):
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photoUrl = models.URLField(blank=True)
-    bioSourceUrl = models.URLField(blank=True)
+    photoUrl = FlexibleUrlField(blank=True)
+    bioSourceUrl = FlexibleUrlField(blank=True)
     bioSourceCredit_ru = models.CharField(max_length=255, blank=True)
     bioSourceCredit_uz = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField(default=0)
@@ -226,12 +232,12 @@ class PhotoItem(models.Model):
         null=True
     )
     
-    url = models.URLField()
+    url = FlexibleUrlField()
     caption_ru = models.CharField(max_length=255, blank=True)
     caption_uz = models.CharField(max_length=255, blank=True)
     isHistorical = models.BooleanField(default=False)
     year = models.IntegerField(blank=True)
-    sourceUrl = models.URLField(blank=True)
+    sourceUrl = FlexibleUrlField(blank=True)
     credit_ru = models.CharField(max_length=255, blank=True)
     credit_uz = models.CharField(max_length=255, blank=True)
 
@@ -268,7 +274,7 @@ class AudioGuideTrack(models.Model):
         related_name='track'
         )
     
-    url = models.URLField()
+    url = FlexibleUrlField()
     shortTitle_ru = models.CharField(max_length=255, blank=True)
     shortTitle_uz = models.CharField(max_length=255, blank=True)
     fullTitle_ru = models.CharField(max_length=255, blank=True)
@@ -289,6 +295,17 @@ class ArchitectBio(models.Model):
     role_uz = models.CharField(max_length=255, blank=True)
     bio_ru = models.TextField(blank=True)
     bio_uz = models.TextField(blank=True)
-    photoUrl = models.URLField(blank=True)
+    photoUrl = FlexibleUrlField(blank=True)
 
     milestones = models.ManyToManyField(BiographyMilestone, blank=True)
+
+
+class DbHeartbeat(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    ping_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'DB heartbeat'
+        verbose_name_plural = 'DB heartbeats'

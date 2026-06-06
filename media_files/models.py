@@ -16,7 +16,7 @@ class MediaFile(models.Model):
     title_uz = models.CharField(_("Название (UZ)"), max_length=255, blank=True)
 
     # Файл
-    file = models.FileField(_("Файл"), upload_to='uploads/%Y/%m/%d/')
+    file = models.FileField(_("Файл"), upload_to='uploads/%Y/%m/%d/', blank=True)
     media_type = models.CharField(_("Тип медиа"), max_length=10, choices=MEDIA_TYPES)
 
     # SEO и подписи
@@ -27,7 +27,7 @@ class MediaFile(models.Model):
 
     # Дополнительная информация
     year = models.PositiveIntegerField(_("Год"), null=True, blank=True)
-    source = models.CharField(_("Источник"), max_length=500, blank=True)
+    source = models.CharField(_("Источник"), max_length=2048, blank=True)
 
     # Сортировка
     sort_order = models.PositiveIntegerField(_("Порядок сортировки"), default=0)

@@ -18,10 +18,12 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ====================== SECRET KEY ======================
-# Временно для разработки
-SECRET_KEY = 'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only',
+)
 
-DEBUG = True   # Временно включаем отладку
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
@@ -32,12 +34,20 @@ ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://heritage-project-front.vercel.app',
-    'https://*.vercel.app',
+    'https://heritage-project-front-5q9b.vercel.app',
+    'https://heritageproject-back.onrender.com',
 ]
+
+_csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', '').strip()
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend(
+        origin.strip() for origin in _csrf_origins.split(',') if origin.strip()
+    )
 
 # Application definition
 
 INSTALLED_APPS = [
+    'nested_admin',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -59,6 +69,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'heritage.middleware.PublicApiRateLimitMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -114,18 +125,59 @@ LOGGING = {
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # ====================== DATABASE =======================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+DB_HOST = os.getenv('DB_HOST', '').strip()
+
+if DATABASE_URL:
+    from urllib.parse import urlparse, parse_qs
+
+    db_url = urlparse(DATABASE_URL)
+    query = parse_qs(db_url.query)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_url.path.lstrip('/'),
+            'USER': db_url.username,
+            'PASSWORD': db_url.password,
+            'HOST': db_url.hostname,
+            'PORT': db_url.port or 5432,
+            'OPTIONS': {
+                'sslmode': query.get('sslmode', ['require'])[0],
+            },
+        }
     }
-}
+elif DB_HOST:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', ''),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': DB_HOST,
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': os.getenv('DB_SSLMODE', 'require'),
+            },
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+VERCEL_DEPLOY_HOOK_URL = os.getenv('VERCEL_DEPLOY_HOOK_URL', '').strip()
 
 # ====================== LOCALIZATION & STATIC =======================
 LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 USE_TZ = True
+
+# drf-spectacular does not care about i18n; keep defaults.
+
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -135,6 +187,32 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'          # dev only
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ====================== CACHE (Redis) ======================
+CACHE_ENV = os.getenv('ENVIRONMENT', 'dev').strip().lower()
+REDIS_URL = os.getenv('REDIS_URL', '').strip()
+
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 2,
+                'SOCKET_TIMEOUT': 2,
+                'IGNORE_EXCEPTIONS': True,
+            },
+            'KEY_PREFIX': f'{CACHE_ENV}:heritage',
+            'TIMEOUT': 3600,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
 # ====================== REST Framework ======================
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -143,7 +221,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+from .schema_settings import SPECTACULAR_BASE as SPECTACULAR_SETTINGS
+
+
+
+
 # ====================== CORS (front) ======================
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -166,21 +250,41 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Основные фронтенды
-CORS_ALLOWED_ORIGINS = [
-    "https://heritage-project-front-5q9b.vercel.app",
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://heritage-project-front.vercel.app',
-    'https://*.vercel.app',           # для всех поддоменов vercel
-]
+_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '').strip()
+if _cors_origins:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in _cors_origins.split(',')
+        if origin.strip()
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://heritage-project-front-5q9b.vercel.app',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://heritage-project-front.vercel.app',
+    ]
 
-# Если хотите получать origins из .env (опционально)
-# CORS_ALLOWED_ORIGINS = [
-#     origin.strip() 
-#     for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-#     if origin.strip()
-# ]
+_cors_regexes = os.getenv('CORS_ALLOWED_ORIGIN_REGEXES', '').strip()
+if _cors_regexes:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        pattern.strip()
+        for pattern in _cors_regexes.split(',')
+        if pattern.strip()
+    ]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r'^https://[\w-]+\.vercel\.app$',
+    ]
+
+# ====================== PUBLIC API (BE-19) ======================
+HERITAGE_HTTP_CACHE_MAX_AGE = int(os.getenv('HERITAGE_HTTP_CACHE_MAX_AGE', '3600'))
+API_RATE_LIMIT_PER_MINUTE = int(os.getenv('API_RATE_LIMIT_PER_MINUTE', '120'))
+API_RATE_LIMIT_ENABLED = os.getenv('API_RATE_LIMIT_ENABLED', 'true').lower() in (
+    'true',
+    '1',
+    'yes',
+)
 
 # ====================== FILES ======================
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'

@@ -1,0 +1,463 @@
+openapi: 3.0.3
+info:
+  title: Heritage API
+  version: 0.0.0
+paths:
+  /api/app:
+    get:
+      operationId: api_app_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/health/:
+    get:
+      operationId: api_v1_health_retrieve
+      description: |-
+        Health check endpoint for monitoring and Render.com
+        Checks database connectivity with SELECT 1.
+        Returns 200 OK if healthy, 503 if database is down.
+        No caching - response is never cached.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/healthz/:
+    get:
+      operationId: api_v1_healthz_retrieve
+      description: |-
+        Health check endpoint for monitoring and Render.com
+        Checks database connectivity with SELECT 1.
+        Returns 200 OK if healthy, 503 if database is down.
+        No caching - response is never cached.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/heritage/:
+    get:
+      operationId: api_v1_heritage_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeritageObjectList'
+          description: ''
+  /api/v1/heritage/{slug}/:
+    get:
+      operationId: api_v1_heritage_retrieve_2
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeritageObject'
+          description: ''
+  /api/v1/tour-packs/:
+    get:
+      operationId: api_v1_tour_packs_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourPackManifest'
+          description: ''
+components:
+  schemas:
+    ArchitectBio:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+        role:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        photoUrl:
+          type: string
+          maxLength: 2048
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiographyMilestone'
+          readOnly: true
+    ArchitectureDetail:
+      type: object
+      properties:
+        title:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        image:
+          type: string
+          readOnly: true
+        image_credit:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+    AudioGuide:
+      type: object
+      properties:
+        narrator_label:
+          type: string
+          readOnly: true
+        transcript:
+          type: string
+          readOnly: true
+        atmosphere_description:
+          type: string
+          readOnly: true
+        music_suggestion:
+          type: string
+          readOnly: true
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AudioGuideTrack'
+          readOnly: true
+    AudioGuideTrack:
+      type: object
+      properties:
+        url:
+          type: string
+          maxLength: 2048
+        short_title:
+          type: string
+          readOnly: true
+        full_title:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - url
+    BeforeAfterPair:
+      type: object
+      properties:
+        title:
+          type: string
+          readOnly: true
+        before_image:
+          type: string
+          readOnly: true
+        after_image:
+          type: string
+          readOnly: true
+        year_before:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Год 'Было'
+        year_after:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+          title: Год 'Стало'
+        description:
+          type: string
+          readOnly: true
+        sort_order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Порядок
+    BiographyMilestone:
+      type: object
+      properties:
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        event:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - year
+    HeritageObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        former_name:
+          type: string
+          readOnly: true
+        current_purpose:
+          type: string
+          readOnly: true
+        historical_purpose:
+          type: string
+          readOnly: true
+        address:
+          type: string
+          readOnly: true
+        lat:
+          type: number
+          format: double
+          nullable: true
+        lng:
+          type: number
+          format: double
+          nullable: true
+        mapUrl:
+          type: string
+          maxLength: 2048
+        year_built:
+          type: integer
+          readOnly: true
+          nullable: true
+        yearRange:
+          type: string
+          maxLength: 50
+        year_built_label:
+          type: string
+          readOnly: true
+        architectural_style:
+          type: string
+          readOnly: true
+        architect:
+          type: string
+          readOnly: true
+        architectural_description:
+          type: string
+          readOnly: true
+        history:
+          type: string
+          readOnly: true
+        short_description:
+          type: string
+          readOnly: true
+        visual_style_notes:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        isPublished:
+          type: boolean
+        tourPublished:
+          type: boolean
+        cover:
+          type: string
+          readOnly: true
+        architecture_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArchitectureDetail'
+          readOnly: true
+        before_after_pairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BeforeAfterPair'
+          readOnly: true
+        historical_figures:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoricalFigure'
+          readOnly: true
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhotoItem'
+          readOnly: true
+        audio_guide:
+          allOf:
+          - $ref: '#/components/schemas/AudioGuide'
+          readOnly: true
+        architect_bio:
+          allOf:
+          - $ref: '#/components/schemas/ArchitectBio'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    HeritageObjectList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          readOnly: true
+        year_built:
+          type: integer
+          readOnly: true
+          nullable: true
+        yearRange:
+          type: string
+          maxLength: 50
+        address:
+          type: string
+          readOnly: true
+        short_description:
+          type: string
+          readOnly: true
+        cover:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        isPublished:
+          type: boolean
+    HistoricalFigure:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+        role:
+          type: string
+          readOnly: true
+        bio:
+          type: string
+          readOnly: true
+        photo:
+          type: string
+          readOnly: true
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/BiographyMilestone'
+          readOnly: true
+    PhotoItem:
+      type: object
+      properties:
+        url:
+          type: string
+          maxLength: 2048
+        caption:
+          type: string
+          readOnly: true
+        credit:
+          type: string
+          readOnly: true
+        isHistorical:
+          type: boolean
+        year:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - url
+    TourPackManifest:
+      type: object
+      properties:
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        googleDriveFileId:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - googleDriveFileId
+      - updatedAt
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

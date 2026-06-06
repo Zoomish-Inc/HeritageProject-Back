@@ -1,4 +1,5 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+import nested_admin
 from django.utils.html import format_html
 from .models import (
     HeritageObject,
@@ -12,7 +13,7 @@ from .models import (
     BiographyMilestone,
 )
 
-class ArchitectureDetailInline(admin.TabularInline):
+class ArchitectureDetailInline(nested_admin.NestedTabularInline):
     model = ArchitectureDetail
     extra = 1
     fields = ('order', 
@@ -27,15 +28,15 @@ class ArchitectureDetailInline(admin.TabularInline):
               )
 
 
-class BeforeAfterPairInline(admin.TabularInline):
+class BeforeAfterPairInline(nested_admin.NestedTabularInline):
     model = BeforeAfterPair
     extra = 1
     fields = (
         'sort_order',
         'label_ru',
         'label_uz',
-        'before',
-        'after',
+        'beforeUrl',
+        'afterUrl',
         'year_before',
         'year_after',
         'description_ru',
@@ -43,7 +44,7 @@ class BeforeAfterPairInline(admin.TabularInline):
     )
 
 
-class HistoricalFigureInline(admin.StackedInline):
+class HistoricalFigureInline(nested_admin.NestedStackedInline):
     model = HistoricalFigure
     extra = 1
     fields = (
@@ -62,7 +63,7 @@ class HistoricalFigureInline(admin.StackedInline):
     )
 
 
-class PhotoItemInline(admin.TabularInline):
+class PhotoItemInline(nested_admin.NestedTabularInline):
     model = PhotoItem
     fk_name = 'heritage'
     extra = 1
@@ -78,7 +79,7 @@ class PhotoItemInline(admin.TabularInline):
         'credit_uz',
     )
 
-class HistoryMediaInline(admin.TabularInline):
+class HistoryMediaInline(nested_admin.NestedTabularInline):
     model = PhotoItem
     fk_name = 'heritage_history_media'
     extra = 1
@@ -96,21 +97,24 @@ class HistoryMediaInline(admin.TabularInline):
     )
 
 
-class AudioGuideTrackInline(admin.TabularInline):
+class AudioGuideTrackInline(nested_admin.NestedTabularInline):
     model = AudioGuideTrack
     extra = 1
-    fields = ('order', 
-              'url', 
-              'shortTitle_ru', 
-              'shortTitle_uz', 
-              'fullTitle_ru',
-              'fullTitle_uz',
-              )
+    fields = (
+        'order',
+        'url',
+        'shortTitle_ru',
+        'shortTitle_uz',
+        'fullTitle_ru',
+        'fullTitle_uz',
+    )
 
 
-class AudioGuideInline(admin.StackedInline):
+class AudioGuideInline(nested_admin.NestedStackedInline):
     model = AudioGuide
-    extra = 1
+    extra = 0
+    max_num = 1
+    inlines = [AudioGuideTrackInline]
     fields = (
         'narratorLabel_ru',
         'narratorLabel_uz',
@@ -121,9 +125,8 @@ class AudioGuideInline(admin.StackedInline):
         'musicSuggestion_ru',
         'musicSuggestion_uz',
     )
-    inlines = [AudioGuideTrackInline]
 
-class ArchitectBioInline(admin.StackedInline):
+class ArchitectBioInline(nested_admin.NestedStackedInline):
     model = ArchitectBio
     extra = 1
     fields = (
@@ -138,15 +141,16 @@ class ArchitectBioInline(admin.StackedInline):
     )
 
 @admin.register(HeritageObject)
-class HeritageObjectAdmin(admin.ModelAdmin):
-    list_display = ('name_ru', 'slug', 'yearBuilt', 'isPublished', 'order', 'created_at')
-    list_filter = ('isPublished', 'yearBuilt')
+class HeritageObjectAdmin(nested_admin.NestedModelAdmin):
+    list_display = ('name_ru', 'slug', 'yearBuilt', 'isPublished', 'tourPublished', 'order', 'created_at')
+    list_filter = ('isPublished', 'tourPublished', 'yearBuilt')
     search_fields = ('name_ru', 'name_uz', 'slug', 'address_ru')
     ordering = ('order', 'name_ru')
     
     fieldsets = (
         ('Основная информация', {
             'fields': (
+                'isPublished',
                 'name_ru', 'name_uz',
                 'formerName_ru', 'formerName_uz',
                 'slug', 'order', 'coverImageUrl'
@@ -177,8 +181,11 @@ class HeritageObjectAdmin(admin.ModelAdmin):
                 'visualStyleNotes_ru', 'visualStyleNotes_uz'
             )
         }),
-        ('Публикация и тур', {
-            'fields': ('isPublished', 'tourPublished', 'tourEntryUrl')
+        ('3D-тур (Google Drive)', {
+            'fields': (
+                'tourPublished',
+                'tourGoogleDriveFileId',
+            )
         }),
     )
     
@@ -208,13 +215,20 @@ class HeritageObjectAdmin(admin.ModelAdmin):
         
         # Если проверку прошли - сохраняем
         super().save_model(request, obj, form, change)
-        self.message_user.success(request, '✅ Объект сохранен')
+        self.message_user(request, 'Объект сохранен', level=messages.SUCCESS)
 
-# Регистрируем остальные модели (для прямого редактирования)
-admin.site.register(ArchitectureDetail)
-admin.site.register(BeforeAfterPair)
-admin.site.register(HistoricalFigure)
-admin.site.register(PhotoItem)
-admin.site.register(AudioGuide)
-admin.site.register(AudioGuideTrack)
-admin.site.register(ArchitectBio)
+        if getattr(obj, '_vercel_deploy_failed', False):
+            self.message_user(
+                request,
+                'Тур сохранён, но не удалось запустить деплой фронтенда. Проверьте VERCEL_DEPLOY_HOOK_URL.',
+                level=messages.WARNING,
+            )
+
+
+
+
+
+# Остальные модели используются через inlines.
+# Их отдельная регистрация в admin может ломать workflow сохранения/редиректов.
+# Поэтому убираем отдельные registration.
+

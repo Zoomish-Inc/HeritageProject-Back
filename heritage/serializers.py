@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (
     HeritageObject,
     HeritageListItem,
+
     BiographyMilestone,
     ArchitectureDetail,
     BeforeAfterPair,
@@ -13,18 +14,24 @@ from .models import (
 )
 
 
-class LocalizedStringField(serializers.SerializerMethodField):
+class LocalizedStringField(serializers.Field):
     """Превращает *_ru / *_uz поля в {"ru": "...", "uz": "..."}"""
+
     def __init__(self, ru_field: str, uz_field: str, **kwargs):
         self.ru_field = ru_field
         self.uz_field = uz_field
+        kwargs.setdefault('read_only', True)
         super().__init__(**kwargs)
+
+    def get_attribute(self, instance):
+        return instance
 
     def to_representation(self, obj):
         return {
             'ru': getattr(obj, self.ru_field, ''),
             'uz': getattr(obj, self.uz_field, ''),
         }
+
 
 
 # ====================== Вложенные сериализаторы ======================
@@ -58,28 +65,29 @@ class ArchitectureDetailSerializer(serializers.ModelSerializer):
 class BeforeAfterPairSerializer(serializers.ModelSerializer):
     title = LocalizedStringField(ru_field='label_ru', uz_field='label_uz')
     description = LocalizedStringField(ru_field='description_ru', uz_field='description_uz')
-
     before_image = serializers.SerializerMethodField()
     after_image = serializers.SerializerMethodField()
 
     class Meta:
         model = BeforeAfterPair
-        fields = ['title', 'before_image', 'after_image', 
-                  'year_before', 'year_after', 'description', 'sort_order']
+        fields = [
+            'title', 'before_image', 'after_image',
+            'year_before', 'year_after', 'description', 'sort_order',
+        ]
+
+    def _resolve_image_url(self, url):
+        if not url:
+            return None
+        request = self.context.get('request')
+        if request and url.startswith('/'):
+            return request.build_absolute_uri(url)
+        return url
 
     def get_before_image(self, obj):
-        if getattr(obj.before, 'file', None):
-            request = self.context.get('request')
-            url = obj.before.file.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return self._resolve_image_url(obj.beforeUrl)
 
     def get_after_image(self, obj):
-        if getattr(obj.after, 'file', None):
-            request = self.context.get('request')
-            url = obj.after.file.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return self._resolve_image_url(obj.afterUrl)
 
 
 class HistoricalFigureSerializer(serializers.ModelSerializer):
@@ -149,17 +157,19 @@ class ArchitectBioSerializer(serializers.ModelSerializer):
 
 # ====================== Основные сериализаторы ======================
 
-class HeritageListItemSerializer(serializers.ModelSerializer):
+class HeritageObjectListSerializer(serializers.ModelSerializer):
     name = LocalizedStringField(ru_field='name_ru', uz_field='name_uz')
     address = LocalizedStringField(ru_field='address_ru', uz_field='address_uz')
     short_description = LocalizedStringField(ru_field='shortDescription_ru', uz_field='shortDescription_uz')
+    year_built = serializers.IntegerField(source='yearBuilt', allow_null=True, read_only=True)
 
     cover = serializers.SerializerMethodField()
 
     class Meta:
-        model = HeritageListItem
+        model = HeritageObject
+
         fields = [
-            'id', 'slug', 'name', 'yearRange', 'address',
+            'id', 'slug', 'name', 'year_built', 'yearRange', 'address',
             'short_description', 'cover', 'order', 'isPublished'
         ]
 
@@ -182,6 +192,7 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
     history = LocalizedStringField(ru_field='history_ru', uz_field='history_uz')
     short_description = LocalizedStringField(ru_field='shortDescription_ru', uz_field='shortDescription_uz')
     year_built_label = LocalizedStringField(ru_field='yearBuiltLabel_ru', uz_field='yearBuiltLabel_uz')
+    year_built = serializers.IntegerField(source='yearBuilt', allow_null=True, read_only=True)
     visual_style_notes = LocalizedStringField(ru_field='visualStyleNotes_ru', uz_field='visualStyleNotes_uz')
 
     cover = serializers.SerializerMethodField()
@@ -190,7 +201,8 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
     architecture_details = ArchitectureDetailSerializer(many=True, read_only=True, source='architectureDetails')
     before_after_pairs = BeforeAfterPairSerializer(many=True, read_only=True, source='beforeAfterPairs')
     historical_figures = HistoricalFigureSerializer(many=True, read_only=True, source='historicalFigures')
-    photos = PhotoItemSerializer(many=True, read_only=True, source='photos')
+    photos = PhotoItemSerializer(many=True, read_only=True)
+
     audio_guide = AudioGuideSerializer(read_only=True, source='audioGuide')
     architect_bio = ArchitectBioSerializer(read_only=True, source='architectBio')
 
@@ -200,11 +212,11 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
             'id', 'slug', 'name', 'former_name',
             'current_purpose', 'historical_purpose',
             'address', 'lat', 'lng', 'mapUrl',
-            'yearBuilt', 'yearRange', 'year_built_label',
+            'year_built', 'yearRange', 'year_built_label',
             'architectural_style', 'architect',
             'architectural_description', 'history',
             'short_description', 'visual_style_notes',
-            'order', 'isPublished', 'tourPublished', 'tourEntryUrl',
+            'order', 'isPublished', 'tourPublished',
             'cover',
             'architecture_details',
             'before_after_pairs',
@@ -220,3 +232,12 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             return request.build_absolute_uri(obj.coverImageUrl) if request else obj.coverImageUrl
         return None
+
+
+class TourPackManifestSerializer(serializers.ModelSerializer):
+    googleDriveFileId = serializers.CharField(source='tourGoogleDriveFileId')
+    updatedAt = serializers.DateTimeField(source='tourPackUpdatedAt')
+
+    class Meta:
+        model = HeritageObject
+        fields = ['slug', 'googleDriveFileId', 'updatedAt']

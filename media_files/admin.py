@@ -1,3 +1,3 @@
 from django.contrib import admin
 
-# Register your models here.
+# MediaFile больше не используется в «Было/Стало». Модель оставлена для совместимости БД.
