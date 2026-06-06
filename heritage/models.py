@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 import uuid
 
 from heritage.fields import FlexibleUrlField
+from heritage.tour_packs import normalize_google_drive_file_id
 
 
 class HeritageObject(models.Model):
@@ -53,7 +54,17 @@ class HeritageObject(models.Model):
 
     isPublished = models.BooleanField(default=False)
     tourPublished = models.BooleanField(default=False)
-    tourEntryUrl = FlexibleUrlField( blank=True, null=True)
+    tourGoogleDriveFileId = models.CharField(
+        max_length=128,
+        blank=True,
+        help_text='ID файла zip на Google Drive или полная share-ссылка.',
+    )
+    tourPackUpdatedAt = models.DateTimeField(null=True, blank=True)
+    tourEntryUrl = FlexibleUrlField(
+        blank=True,
+        null=True,
+        help_text='Опционально. Если пусто — на фронте подставится /tour-packs/{slug}/index.htm.',
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -64,10 +75,20 @@ class HeritageObject(models.Model):
     def __str__(self):
         return self.name_ru
 
+    def clean(self):
+        super().clean()
+        self.tourGoogleDriveFileId = normalize_google_drive_file_id(self.tourGoogleDriveFileId)
+        if self.tourPublished and not self.tourGoogleDriveFileId:
+            raise ValidationError({
+                'tourGoogleDriveFileId': 'Для опубликованного тура нужен Google Drive file ID.',
+            })
+
     def save(self, *args, **kwargs):
         # Ensure slug is generated before validation/publishing logic.
         if not self.slug and self.name_ru:
             self.slug = slugify(self.name_ru)
+
+        self.tourGoogleDriveFileId = normalize_google_drive_file_id(self.tourGoogleDriveFileId)
 
         # Publishing limit logic (only if object is being published)
         if self.isPublished:

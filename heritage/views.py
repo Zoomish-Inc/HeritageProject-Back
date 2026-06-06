@@ -9,7 +9,11 @@ from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 
 from .models import HeritageObject
-from .serializers import HeritageObjectSerializer, HeritageObjectListSerializer
+from .serializers import (
+    HeritageObjectSerializer,
+    HeritageObjectListSerializer,
+    TourPackManifestSerializer,
+)
 from . import cache_service
 from .db_keepalive import ping_database
 
@@ -61,6 +65,20 @@ class HeritageDetailView(APIView, ApiResponseMixin):
 
         data, cache_status = cache_service.get_or_compute(cache_service.detail_key(slug), load)
         return self.get_response(data=data, cache_status=cache_status)
+
+
+class TourPackManifestView(APIView, ApiResponseMixin):
+    permission_classes = [AllowAny]
+    serializer_class = TourPackManifestSerializer
+
+    def get(self, request):
+        queryset = HeritageObject.objects.filter(
+            tourPublished=True,
+        ).exclude(
+            tourGoogleDriveFileId='',
+        ).order_by('order')
+        serializer = TourPackManifestSerializer(queryset, many=True)
+        return self.get_response(data=serializer.data)
 
 
 @method_decorator(never_cache, name='dispatch')

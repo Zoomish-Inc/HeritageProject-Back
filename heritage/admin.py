@@ -139,8 +139,8 @@ class ArchitectBioInline(admin.StackedInline):
 
 @admin.register(HeritageObject)
 class HeritageObjectAdmin(admin.ModelAdmin):
-    list_display = ('name_ru', 'slug', 'yearBuilt', 'isPublished', 'order', 'created_at')
-    list_filter = ('isPublished', 'yearBuilt')
+    list_display = ('name_ru', 'slug', 'yearBuilt', 'isPublished', 'tourPublished', 'order', 'created_at')
+    list_filter = ('isPublished', 'tourPublished', 'yearBuilt')
     search_fields = ('name_ru', 'name_uz', 'slug', 'address_ru')
     ordering = ('order', 'name_ru')
     
@@ -178,7 +178,12 @@ class HeritageObjectAdmin(admin.ModelAdmin):
             )
         }),
         ('Публикация и тур', {
-            'fields': ('isPublished', 'tourPublished', 'tourEntryUrl')
+            'fields': (
+                'isPublished',
+                'tourPublished',
+                'tourGoogleDriveFileId',
+                'tourEntryUrl',
+            )
         }),
     )
     
@@ -208,13 +213,14 @@ class HeritageObjectAdmin(admin.ModelAdmin):
         
         # Если проверку прошли - сохраняем
         super().save_model(request, obj, form, change)
-        self.message_user(request, '✅ Объект сохранен', level=messages.SUCCESS)
+        self.message_user(request, 'Объект сохранен', level=messages.SUCCESS)
 
-        # DEBUG в stdout сервера
-        try:
-            print(f"[ADMIN] save_model HeritageObject pk={getattr(obj, 'pk', None)} isPublished={obj.isPublished} slug={obj.slug}")
-        except Exception:
-            pass
+        if getattr(obj, '_vercel_deploy_failed', False):
+            self.message_user(
+                request,
+                'Тур сохранён, но не удалось запустить деплой фронтенда. Проверьте VERCEL_DEPLOY_HOOK_URL.',
+                level=messages.WARNING,
+            )
 
 
 

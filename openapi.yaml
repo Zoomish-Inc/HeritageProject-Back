@@ -1,177 +1,30 @@
 openapi: 3.0.3
 info:
-  title: ''
+  title: Heritage API
   version: 0.0.0
 paths:
   /api/app:
     get:
-      operationId: app_retrieve
+      operationId: api_app_retrieve
       tags:
-      - app
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '204':
-          description: Empty keep-alive response
-  /api/schema/openapi.yaml:
-    get:
-      operationId: schema_openapi.yaml_retrieve
-      description: |-
-        OpenApi3 schema for this API. Format can be selected via content negotiation.
-
-        - YAML: application/vnd.oai.openapi
-        - JSON: application/vnd.oai.openapi+json
-      parameters:
-      - in: query
-        name: format
-        schema:
-          type: string
-          enum:
-          - json
-          - yaml
-      - in: query
-        name: lang
-        schema:
-          type: string
-          enum:
-          - af
-          - ar
-          - ar-dz
-          - ast
-          - az
-          - be
-          - bg
-          - bn
-          - br
-          - bs
-          - ca
-          - ckb
-          - cs
-          - cy
-          - da
-          - de
-          - dsb
-          - el
-          - en
-          - en-au
-          - en-gb
-          - eo
-          - es
-          - es-ar
-          - es-co
-          - es-mx
-          - es-ni
-          - es-ve
-          - et
-          - eu
-          - fa
-          - fi
-          - fr
-          - fy
-          - ga
-          - gd
-          - gl
-          - he
-          - hi
-          - hr
-          - hsb
-          - ht
-          - hu
-          - hy
-          - ia
-          - id
-          - ig
-          - io
-          - is
-          - it
-          - ja
-          - ka
-          - kab
-          - kk
-          - km
-          - kn
-          - ko
-          - ky
-          - lb
-          - lt
-          - lv
-          - mk
-          - ml
-          - mn
-          - mr
-          - ms
-          - my
-          - nb
-          - ne
-          - nl
-          - nn
-          - os
-          - pa
-          - pl
-          - pt
-          - pt-br
-          - ro
-          - ru
-          - sk
-          - sl
-          - sq
-          - sr
-          - sr-latn
-          - sv
-          - sw
-          - ta
-          - te
-          - tg
-          - th
-          - tk
-          - tr
-          - tt
-          - udm
-          - ug
-          - uk
-          - ur
-          - uz
-          - vi
-          - zh-hans
-          - zh-hant
-      tags:
-      - schema
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
       - {}
       responses:
         '200':
-          content:
-            application/vnd.oai.openapi:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/yaml:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/vnd.oai.openapi+json:
-              schema:
-                type: object
-                additionalProperties: {}
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
+          description: No response body
   /api/v1/health/:
     get:
-      operationId: v1_health_retrieve
+      operationId: api_v1_health_retrieve
       description: |-
         Health check endpoint for monitoring and Render.com
         Checks database connectivity with SELECT 1.
         Returns 200 OK if healthy, 503 if database is down.
         No caching - response is never cached.
       tags:
-      - v1
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -181,14 +34,14 @@ paths:
           description: No response body
   /api/v1/healthz/:
     get:
-      operationId: v1_healthz_retrieve
+      operationId: api_v1_healthz_retrieve
       description: |-
         Health check endpoint for monitoring and Render.com
         Checks database connectivity with SELECT 1.
         Returns 200 OK if healthy, 503 if database is down.
         No caching - response is never cached.
       tags:
-      - v1
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -198,9 +51,9 @@ paths:
           description: No response body
   /api/v1/heritage/:
     get:
-      operationId: v1_heritage_retrieve
+      operationId: api_v1_heritage_retrieve
       tags:
-      - v1
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -214,7 +67,7 @@ paths:
           description: ''
   /api/v1/heritage/{slug}/:
     get:
-      operationId: v1_heritage_retrieve_2
+      operationId: api_v1_heritage_retrieve_2
       parameters:
       - in: path
         name: slug
@@ -222,7 +75,7 @@ paths:
           type: string
         required: true
       tags:
-      - v1
+      - api
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -234,6 +87,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/HeritageObject'
           description: ''
+  /api/v1/tour-packs/:
+    get:
+      operationId: api_v1_tour_packs_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TourPackManifest'
+          description: ''
 components:
   schemas:
     ArchitectBio:
@@ -241,93 +110,86 @@ components:
       properties:
         name:
           type: string
+          readOnly: true
         role:
           type: string
+          readOnly: true
         bio:
           type: string
+          readOnly: true
         photoUrl:
           type: string
-          format: uri
-          maxLength: 200
+          maxLength: 2048
         milestones:
           type: array
           items:
             $ref: '#/components/schemas/BiographyMilestone'
           readOnly: true
-      required:
-      - bio
-      - milestones
-      - name
-      - role
     ArchitectureDetail:
       type: object
       properties:
         title:
           type: string
+          readOnly: true
         description:
           type: string
+          readOnly: true
         image:
           type: string
           readOnly: true
         image_credit:
           type: string
+          readOnly: true
         order:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
-      required:
-      - description
-      - image
-      - image_credit
-      - title
     AudioGuide:
       type: object
       properties:
         narrator_label:
           type: string
+          readOnly: true
         transcript:
           type: string
+          readOnly: true
         atmosphere_description:
           type: string
+          readOnly: true
         music_suggestion:
           type: string
+          readOnly: true
         tracks:
           type: array
           items:
             $ref: '#/components/schemas/AudioGuideTrack'
           readOnly: true
-      required:
-      - atmosphere_description
-      - music_suggestion
-      - narrator_label
-      - tracks
-      - transcript
     AudioGuideTrack:
       type: object
       properties:
         url:
           type: string
-          format: uri
-          maxLength: 200
+          maxLength: 2048
         short_title:
           type: string
+          readOnly: true
         full_title:
           type: string
+          readOnly: true
         order:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
       required:
-      - full_title
-      - short_title
       - url
     BeforeAfterPair:
       type: object
       properties:
         title:
           type: string
+          readOnly: true
         before_image:
           type: string
           readOnly: true
@@ -350,17 +212,13 @@ components:
           title: Год 'Стало'
         description:
           type: string
+          readOnly: true
         sort_order:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
           title: Порядок
-      required:
-      - after_image
-      - before_image
-      - description
-      - title
     BiographyMilestone:
       type: object
       properties:
@@ -371,13 +229,13 @@ components:
           format: int64
         event:
           type: string
+          readOnly: true
         order:
           type: integer
           maximum: 9223372036854775807
           minimum: 0
           format: int64
       required:
-      - event
       - year
     HeritageObject:
       type: object
@@ -392,14 +250,19 @@ components:
           pattern: ^[-a-zA-Z0-9_]+$
         name:
           type: string
+          readOnly: true
         former_name:
           type: string
+          readOnly: true
         current_purpose:
           type: string
+          readOnly: true
         historical_purpose:
           type: string
+          readOnly: true
         address:
           type: string
+          readOnly: true
         lat:
           type: number
           format: double
@@ -410,31 +273,35 @@ components:
           nullable: true
         mapUrl:
           type: string
-          format: uri
-          maxLength: 200
-        yearBuilt:
+          maxLength: 2048
+        year_built:
           type: integer
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
-          format: int64
+          readOnly: true
           nullable: true
         yearRange:
           type: string
           maxLength: 50
         year_built_label:
           type: string
+          readOnly: true
         architectural_style:
           type: string
+          readOnly: true
         architect:
           type: string
+          readOnly: true
         architectural_description:
           type: string
+          readOnly: true
         history:
           type: string
+          readOnly: true
         short_description:
           type: string
+          readOnly: true
         visual_style_notes:
           type: string
+          readOnly: true
         order:
           type: integer
           maximum: 9223372036854775807
@@ -446,9 +313,9 @@ components:
           type: boolean
         tourEntryUrl:
           type: string
-          format: uri
           nullable: true
-          maxLength: 200
+          description: Опционально. Если пусто — на фронте подставится /tour-packs/{slug}/index.htm.
+          maxLength: 2048
         cover:
           type: string
           readOnly: true
@@ -488,29 +355,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-      required:
-      - address
-      - architect
-      - architect_bio
-      - architectural_description
-      - architectural_style
-      - architecture_details
-      - audio_guide
-      - before_after_pairs
-      - cover
-      - created_at
-      - current_purpose
-      - former_name
-      - historical_figures
-      - historical_purpose
-      - history
-      - id
-      - name
-      - photos
-      - short_description
-      - updated_at
-      - visual_style_notes
-      - year_built_label
     HeritageObjectList:
       type: object
       properties:
@@ -524,13 +368,20 @@ components:
           pattern: ^[-a-zA-Z0-9_]+$
         name:
           type: string
+          readOnly: true
+        year_built:
+          type: integer
+          readOnly: true
+          nullable: true
         yearRange:
           type: string
           maxLength: 50
         address:
           type: string
+          readOnly: true
         short_description:
           type: string
+          readOnly: true
         cover:
           type: string
           readOnly: true
@@ -541,21 +392,18 @@ components:
           format: int64
         isPublished:
           type: boolean
-      required:
-      - address
-      - cover
-      - id
-      - name
-      - short_description
     HistoricalFigure:
       type: object
       properties:
         name:
           type: string
+          readOnly: true
         role:
           type: string
+          readOnly: true
         bio:
           type: string
+          readOnly: true
         photo:
           type: string
           readOnly: true
@@ -569,23 +417,18 @@ components:
           items:
             $ref: '#/components/schemas/BiographyMilestone'
           readOnly: true
-      required:
-      - bio
-      - milestones
-      - name
-      - photo
-      - role
     PhotoItem:
       type: object
       properties:
         url:
           type: string
-          format: uri
-          maxLength: 200
+          maxLength: 2048
         caption:
           type: string
+          readOnly: true
         credit:
           type: string
+          readOnly: true
         isHistorical:
           type: boolean
         year:
@@ -599,9 +442,22 @@ components:
           minimum: 0
           format: int64
       required:
-      - caption
-      - credit
       - url
+    TourPackManifest:
+      type: object
+      properties:
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        googleDriveFileId:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - googleDriveFileId
+      - updatedAt
   securitySchemes:
     basicAuth:
       type: http

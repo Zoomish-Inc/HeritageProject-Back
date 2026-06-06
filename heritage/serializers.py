@@ -235,3 +235,12 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             return request.build_absolute_uri(obj.coverImageUrl) if request else obj.coverImageUrl
         return None
+
+
+class TourPackManifestSerializer(serializers.ModelSerializer):
+    googleDriveFileId = serializers.CharField(source='tourGoogleDriveFileId')
+    updatedAt = serializers.DateTimeField(source='tourPackUpdatedAt')
+
+    class Meta:
+        model = HeritageObject
+        fields = ['slug', 'googleDriveFileId', 'updatedAt']

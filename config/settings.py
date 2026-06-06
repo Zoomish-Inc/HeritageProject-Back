@@ -166,6 +166,8 @@ else:
         }
     }
 
+VERCEL_DEPLOY_HOOK_URL = os.getenv('VERCEL_DEPLOY_HOOK_URL', '').strip()
+
 # ====================== LOCALIZATION & STATIC =======================
 LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'Asia/Tashkent'

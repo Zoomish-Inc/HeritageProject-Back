@@ -35,6 +35,7 @@ cp .env.example .env
 | `ENVIRONMENT` | Префикс ключей кэша `{env}:heritage:...` | `dev`, `production` |
 | `DATABASE_URL` | PostgreSQL (Aiven / Render) | `postgres://...` |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Aiven PostgreSQL (альтернатива DATABASE_URL) | см. Aiven Console |
+| `VERCEL_DEPLOY_HOOK_URL` | Deploy Hook URL фронтенда на Vercel | `https://api.vercel.com/v1/integrations/deploy/...` |
 
 Без `REDIS_URL` API работает как раньше — данные читаются из PostgreSQL/SQLite.
 
@@ -69,6 +70,41 @@ python manage.py spectacular --file openapi.yaml
 ```bash
 curl -i http://127.0.0.1:8000/api/v1/heritage/
 ```
+
+### 3D-туры (Google Drive)
+
+Туры больше не хранятся в git фронтенда. Vercel build скачивает manifest с бэкенда и разворачивает zip с Google Drive.
+
+**Workflow для редактора:**
+
+1. Экспорт 3DVista → zip (полный Web, в архиве есть `lib/tdvplayer.js`)
+2. Загрузить zip на Google Drive → доступ «Все, у кого есть ссылка»
+3. В админке объекта: `slug` = имя папки тура на фронте (например `zhenskaya-gimnaziya`)
+4. Вставить ID файла или share-ссылку в `tourGoogleDriveFileId`
+5. Включить `tourPublished`, Save → автодеплой фронта через Deploy Hook (~2–5 мин)
+
+`tourEntryUrl` опционален: если пусто, фронт подставит `/tour-packs/{slug}/index.htm`.
+
+**Manifest API (для Vercel build):**
+
+```bash
+curl http://127.0.0.1:8000/api/v1/tour-packs/
+```
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "slug": "zhenskaya-gimnaziya",
+      "googleDriveFileId": "1Zk97dKNV0c3gxm-x-AMQHBblXmrc50bU",
+      "updatedAt": "2026-06-06T12:00:00Z"
+    }
+  ]
+}
+```
+
+На Render добавьте `VERCEL_DEPLOY_HOOK_URL` (Vercel → Project → Settings → Git → Deploy Hooks).
 
 ### Keep-alive для Aiven + Render free tier
 

@@ -1,5 +1,6 @@
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from . import cache_service
 from .models import (
@@ -12,6 +13,7 @@ from .models import (
     HistoricalFigure,
     PhotoItem,
 )
+from .tour_packs import tour_fields_changed, trigger_vercel_deploy
 
 
 def _invalidate_by_slug(slug):
@@ -37,13 +39,31 @@ def _heritage_slug_from_instance(instance):
 @receiver(pre_save, sender=HeritageObject)
 def heritage_object_pre_save(sender, instance, **kwargs):
     instance._old_slug = None
-    if not instance.pk:
-        return
-    try:
-        old = HeritageObject.objects.only('slug').get(pk=instance.pk)
-        instance._old_slug = old.slug
-    except HeritageObject.DoesNotExist:
-        pass
+    instance._old_tour_published = None
+    instance._old_tour_google_drive_file_id = ''
+    instance._old_tour_entry_url = None
+
+    if instance.pk:
+        try:
+            old = HeritageObject.objects.only(
+                'slug',
+                'tourPublished',
+                'tourGoogleDriveFileId',
+                'tourEntryUrl',
+            ).get(pk=instance.pk)
+            instance._old_slug = old.slug
+            instance._old_tour_published = old.tourPublished
+            instance._old_tour_google_drive_file_id = old.tourGoogleDriveFileId or ''
+            instance._old_tour_entry_url = old.tourEntryUrl
+        except HeritageObject.DoesNotExist:
+            pass
+
+    file_id_changed = (
+        (instance.tourGoogleDriveFileId or '')
+        != (instance._old_tour_google_drive_file_id or '')
+    )
+    if file_id_changed and instance.tourGoogleDriveFileId:
+        instance.tourPackUpdatedAt = timezone.now()
 
 
 @receiver(post_save, sender=HeritageObject)
@@ -52,6 +72,10 @@ def heritage_object_post_save(sender, instance, **kwargs):
         slug=instance.slug,
         old_slug=getattr(instance, '_old_slug', None),
     )
+
+    if tour_fields_changed(instance):
+        if not trigger_vercel_deploy():
+            instance._vercel_deploy_failed = True
 
 
 @receiver(post_delete, sender=HeritageObject)
