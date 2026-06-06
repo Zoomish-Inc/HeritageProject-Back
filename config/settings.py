@@ -142,11 +142,6 @@ else:
         }
     }
 
-FRONTEND_BASE_URL = os.getenv(
-    'FRONTEND_BASE_URL',
-    'https://heritage-project-front.vercel.app',
-).strip()
-
 # ====================== LOCALIZATION & STATIC =======================
 LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'Asia/Tashkent'
