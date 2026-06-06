@@ -35,8 +35,6 @@ cp .env.example .env
 | `ENVIRONMENT` | Префикс ключей кэша `{env}:heritage:...` | `dev`, `production` |
 | `DATABASE_URL` | PostgreSQL (Aiven / Render) | `postgres://...` |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Aiven PostgreSQL (альтернатива DATABASE_URL) | см. Aiven Console |
-| `FRONTEND_BASE_URL` | Базовый URL для `/images/...` при seed | `https://heritage-project-front.vercel.app` |
-| `SEED_MOCK_HERITAGE` | Запуск seed при билде (`false` чтобы отключить) | `true` (по умолчанию в build.sh) |
 
 Без `REDIS_URL` API работает как раньше — данные читаются из PostgreSQL/SQLite.
 
@@ -46,10 +44,7 @@ cp .env.example .env
 # 5. Применить миграции
 python manage.py migrate
 
-# 6. Загрузить моковые данные (идемпотентно)
-python manage.py seed_mock_heritage
-
-# 7. Запустить сервер разработки
+# 6. Запустить сервер разработки
 python manage.py runserver
 ```
 
@@ -74,15 +69,6 @@ python manage.py spectacular --file openapi.yaml
 ```bash
 curl -i http://127.0.0.1:8000/api/v1/heritage/
 ```
-
-### Seed моковых данных
-
-```bash
-python manage.py seed_mock_heritage          # пропустит, если 6 объектов уже есть
-python manage.py seed_mock_heritage --force  # перезалить
-```
-
-На Render seed вызывается из `build.sh` после `migrate`.
 
 ### Keep-alive для Aiven + Render free tier
 
