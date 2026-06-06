@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+import nested_admin
 from django.utils.html import format_html
 from .models import (
     HeritageObject,
@@ -30,6 +31,7 @@ class ArchitectureDetailInline(admin.TabularInline):
 class BeforeAfterPairInline(admin.TabularInline):
     model = BeforeAfterPair
     extra = 1
+    autocomplete_fields = ('before', 'after')
     fields = (
         'sort_order',
         'label_ru',
@@ -96,21 +98,24 @@ class HistoryMediaInline(admin.TabularInline):
     )
 
 
-class AudioGuideTrackInline(admin.TabularInline):
+class AudioGuideTrackInline(nested_admin.NestedTabularInline):
     model = AudioGuideTrack
     extra = 1
-    fields = ('order', 
-              'url', 
-              'shortTitle_ru', 
-              'shortTitle_uz', 
-              'fullTitle_ru',
-              'fullTitle_uz',
-              )
+    fields = (
+        'order',
+        'url',
+        'shortTitle_ru',
+        'shortTitle_uz',
+        'fullTitle_ru',
+        'fullTitle_uz',
+    )
 
 
-class AudioGuideInline(admin.StackedInline):
+class AudioGuideInline(nested_admin.NestedStackedInline):
     model = AudioGuide
-    extra = 1
+    extra = 0
+    max_num = 1
+    inlines = [AudioGuideTrackInline]
     fields = (
         'narratorLabel_ru',
         'narratorLabel_uz',
@@ -121,7 +126,6 @@ class AudioGuideInline(admin.StackedInline):
         'musicSuggestion_ru',
         'musicSuggestion_uz',
     )
-    inlines = [AudioGuideTrackInline]
 
 class ArchitectBioInline(admin.StackedInline):
     model = ArchitectBio
@@ -138,7 +142,7 @@ class ArchitectBioInline(admin.StackedInline):
     )
 
 @admin.register(HeritageObject)
-class HeritageObjectAdmin(admin.ModelAdmin):
+class HeritageObjectAdmin(nested_admin.NestedModelAdmin):
     list_display = ('name_ru', 'slug', 'yearBuilt', 'isPublished', 'tourPublished', 'order', 'created_at')
     list_filter = ('isPublished', 'tourPublished', 'yearBuilt')
     search_fields = ('name_ru', 'name_uz', 'slug', 'address_ru')

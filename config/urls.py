@@ -22,6 +22,7 @@ from .schema_urls import urlpatterns as schema_urlpatterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('nested_admin/', include('nested_admin.urls')),
     path('api/v1/', include('heritage.urls')),
     path('api/app', AppView.as_view(), name='app'),
 

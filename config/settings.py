@@ -47,6 +47,7 @@ if _csrf_origins:
 # Application definition
 
 INSTALLED_APPS = [
+    'nested_admin',
     'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
