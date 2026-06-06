@@ -13,7 +13,7 @@ from .models import (
     BiographyMilestone,
 )
 
-class ArchitectureDetailInline(admin.TabularInline):
+class ArchitectureDetailInline(nested_admin.NestedTabularInline):
     model = ArchitectureDetail
     extra = 1
     fields = ('order', 
@@ -28,7 +28,7 @@ class ArchitectureDetailInline(admin.TabularInline):
               )
 
 
-class BeforeAfterPairInline(admin.TabularInline):
+class BeforeAfterPairInline(nested_admin.NestedTabularInline):
     model = BeforeAfterPair
     extra = 1
     fields = (
@@ -44,7 +44,7 @@ class BeforeAfterPairInline(admin.TabularInline):
     )
 
 
-class HistoricalFigureInline(admin.StackedInline):
+class HistoricalFigureInline(nested_admin.NestedStackedInline):
     model = HistoricalFigure
     extra = 1
     fields = (
@@ -63,7 +63,7 @@ class HistoricalFigureInline(admin.StackedInline):
     )
 
 
-class PhotoItemInline(admin.TabularInline):
+class PhotoItemInline(nested_admin.NestedTabularInline):
     model = PhotoItem
     fk_name = 'heritage'
     extra = 1
@@ -79,7 +79,7 @@ class PhotoItemInline(admin.TabularInline):
         'credit_uz',
     )
 
-class HistoryMediaInline(admin.TabularInline):
+class HistoryMediaInline(nested_admin.NestedTabularInline):
     model = PhotoItem
     fk_name = 'heritage_history_media'
     extra = 1
@@ -126,7 +126,7 @@ class AudioGuideInline(nested_admin.NestedStackedInline):
         'musicSuggestion_uz',
     )
 
-class ArchitectBioInline(admin.StackedInline):
+class ArchitectBioInline(nested_admin.NestedStackedInline):
     model = ArchitectBio
     extra = 1
     fields = (
