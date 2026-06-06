@@ -18,10 +18,12 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ====================== SECRET KEY ======================
-# Временно для разработки
-SECRET_KEY = 'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only',
+)
 
-DEBUG = True   # Временно включаем отладку
+DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
@@ -32,8 +34,15 @@ ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://heritage-project-front.vercel.app',
-    'https://*.vercel.app',
+    'https://heritage-project-front-5q9b.vercel.app',
+    'https://heritageproject-back.onrender.com',
 ]
+
+_csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', '').strip()
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend(
+        origin.strip() for origin in _csrf_origins.split(',') if origin.strip()
+    )
 
 # Application definition
 
@@ -115,6 +124,7 @@ LOGGING = {
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 # ====================== DATABASE =======================
 DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+DB_HOST = os.getenv('DB_HOST', '').strip()
 
 if DATABASE_URL:
     from urllib.parse import urlparse, parse_qs
@@ -131,6 +141,20 @@ if DATABASE_URL:
             'PORT': db_url.port or 5432,
             'OPTIONS': {
                 'sslmode': query.get('sslmode', ['require'])[0],
+            },
+        }
+    }
+elif DB_HOST:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', ''),
+            'USER': os.getenv('DB_USER', ''),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': DB_HOST,
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': os.getenv('DB_SSLMODE', 'require'),
             },
         }
     }
@@ -221,21 +245,32 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Основные фронтенды
-CORS_ALLOWED_ORIGINS = [
-    "https://heritage-project-front-5q9b.vercel.app",
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://heritage-project-front.vercel.app',
-    'https://*.vercel.app',           # для всех поддоменов vercel
-]
+_cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', '').strip()
+if _cors_origins:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in _cors_origins.split(',')
+        if origin.strip()
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://heritage-project-front-5q9b.vercel.app',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://heritage-project-front.vercel.app',
+    ]
 
-# Если хотите получать origins из .env (опционально)
-# CORS_ALLOWED_ORIGINS = [
-#     origin.strip() 
-#     for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
-#     if origin.strip()
-# ]
+_cors_regexes = os.getenv('CORS_ALLOWED_ORIGIN_REGEXES', '').strip()
+if _cors_regexes:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        pattern.strip()
+        for pattern in _cors_regexes.split(',')
+        if pattern.strip()
+    ]
+else:
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r'^https://[\w-]+\.vercel\.app$',
+    ]
 
 # ====================== FILES ======================
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'

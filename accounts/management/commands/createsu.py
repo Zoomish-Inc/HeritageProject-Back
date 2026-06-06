@@ -6,6 +6,10 @@ class Command(BaseCommand):
     help = 'Создаёт суперпользователя, если он не существует.'
 
     def handle(self, *args, **options):
+        if os.environ.get('CREATE_SUPERUSER', 'true').lower() in ('false', '0', 'no'):
+            print('CREATE_SUPERUSER=False, пропускаем.')
+            return
+
         if not User.objects.filter(username='admin').exists():
             User.objects.create_superuser(
                 username=os.environ.get('DJANGO_SUPERUSER_USERNAME', 'admin'),
