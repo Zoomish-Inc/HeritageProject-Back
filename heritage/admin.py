@@ -31,13 +31,12 @@ class ArchitectureDetailInline(admin.TabularInline):
 class BeforeAfterPairInline(admin.TabularInline):
     model = BeforeAfterPair
     extra = 1
-    autocomplete_fields = ('before', 'after')
     fields = (
         'sort_order',
         'label_ru',
         'label_uz',
-        'before',
-        'after',
+        'beforeUrl',
+        'afterUrl',
         'year_before',
         'year_after',
         'description_ru',

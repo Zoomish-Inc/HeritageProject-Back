@@ -65,32 +65,29 @@ class ArchitectureDetailSerializer(serializers.ModelSerializer):
 class BeforeAfterPairSerializer(serializers.ModelSerializer):
     title = LocalizedStringField(ru_field='label_ru', uz_field='label_uz')
     description = LocalizedStringField(ru_field='description_ru', uz_field='description_uz')
-
     before_image = serializers.SerializerMethodField()
     after_image = serializers.SerializerMethodField()
 
     class Meta:
         model = BeforeAfterPair
-        fields = ['title', 'before_image', 'after_image', 
-                  'year_before', 'year_after', 'description', 'sort_order']
+        fields = [
+            'title', 'before_image', 'after_image',
+            'year_before', 'year_after', 'description', 'sort_order',
+        ]
+
+    def _resolve_image_url(self, url):
+        if not url:
+            return None
+        request = self.context.get('request')
+        if request and url.startswith('/'):
+            return request.build_absolute_uri(url)
+        return url
 
     def get_before_image(self, obj):
-        if getattr(obj.before, 'source', None):
-            return obj.before.source
-        if getattr(obj.before, 'file', None):
-            request = self.context.get('request')
-            url = obj.before.file.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return self._resolve_image_url(obj.beforeUrl)
 
     def get_after_image(self, obj):
-        if getattr(obj.after, 'source', None):
-            return obj.after.source
-        if getattr(obj.after, 'file', None):
-            request = self.context.get('request')
-            url = obj.after.file.url
-            return request.build_absolute_uri(url) if request else url
-        return None
+        return self._resolve_image_url(obj.afterUrl)
 
 
 class HistoricalFigureSerializer(serializers.ModelSerializer):

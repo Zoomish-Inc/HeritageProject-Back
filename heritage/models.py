@@ -169,19 +169,8 @@ class BeforeAfterPair(models.Model):
     label_ru = models.CharField("Название пары (RU)", max_length=255, blank=True)
     label_uz = models.CharField("Название пары (UZ)", max_length=255, blank=True)
 
-    before = models.ForeignKey(
-        'media_files.MediaFile',
-        on_delete=models.CASCADE,
-        related_name='before_pairs',
-        verbose_name="Фото 'Было'",
-    )
-
-    after = models.ForeignKey(
-        'media_files.MediaFile',
-        on_delete=models.CASCADE,
-        related_name='after_pairs',
-        verbose_name="Фото 'Стало'",
-    )
+    beforeUrl = FlexibleUrlField("Фото «Было»", blank=True)
+    afterUrl = FlexibleUrlField("Фото «Стало»", blank=True)
 
     year_before = models.PositiveIntegerField("Год 'Было'", null=True, blank=True)
     year_after = models.PositiveIntegerField("Год 'Стало'", null=True, blank=True)
