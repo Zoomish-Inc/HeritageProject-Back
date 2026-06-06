@@ -13,12 +13,8 @@ paths:
       - basicAuth: []
       - {}
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HeritageObject'
-          description: ''
+        '204':
+          description: Empty keep-alive response
   /api/schema/openapi.yaml:
     get:
       operationId: schema_openapi.yaml_retrieve

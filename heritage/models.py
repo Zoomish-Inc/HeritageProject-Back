@@ -290,3 +290,14 @@ class ArchitectBio(models.Model):
     photoUrl = models.URLField(blank=True)
 
     milestones = models.ManyToManyField(BiographyMilestone, blank=True)
+
+
+class DbHeartbeat(models.Model):
+    key = models.CharField(max_length=64, unique=True)
+    ping_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'DB heartbeat'
+        verbose_name_plural = 'DB heartbeats'

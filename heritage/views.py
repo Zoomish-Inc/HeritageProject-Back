@@ -6,10 +6,12 @@ from django.db.utils import OperationalError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 
 from .models import HeritageObject
 from .serializers import HeritageObjectSerializer, HeritageObjectListSerializer
 from . import cache_service
+from .db_keepalive import ping_database
 
 
 class ApiResponseMixin:
@@ -61,15 +63,16 @@ class HeritageDetailView(APIView, ApiResponseMixin):
         return self.get_response(data=data, cache_status=cache_status)
 
 
-class AppView(APIView, ApiResponseMixin):
-    # Для drf-spectacular: serializer опционален, поэтому задаём хотя бы dummy.
-    serializer_class = HeritageObjectSerializer
+@method_decorator(never_cache, name='dispatch')
+class AppView(APIView):
+    permission_classes = [AllowAny]
 
     def get(self, request):
-        return self.get_response(
-            data='pong',
-            message=None
-        )
+        try:
+            ping_database()
+        except Exception:
+            pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ==============================================
@@ -115,7 +118,7 @@ def health_check(request):
         {
             "status": response_status,
             "database": db_status,
-            "redis": redis_status
+            "redis": redis_status,
         },
-        status=http_status
+        status=http_status,
     )
