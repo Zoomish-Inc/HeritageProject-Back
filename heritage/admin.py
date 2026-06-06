@@ -147,6 +147,7 @@ class HeritageObjectAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Основная информация', {
             'fields': (
+                'isPublished',
                 'name_ru', 'name_uz',
                 'formerName_ru', 'formerName_uz',
                 'slug', 'order', 'coverImageUrl'
@@ -177,12 +178,10 @@ class HeritageObjectAdmin(admin.ModelAdmin):
                 'visualStyleNotes_ru', 'visualStyleNotes_uz'
             )
         }),
-        ('Публикация и тур', {
+        ('3D-тур (Google Drive)', {
             'fields': (
-                'isPublished',
                 'tourPublished',
                 'tourGoogleDriveFileId',
-                'tourEntryUrl',
             )
         }),
     )

@@ -60,11 +60,7 @@ class HeritageObject(models.Model):
         help_text='ID файла zip на Google Drive или полная share-ссылка.',
     )
     tourPackUpdatedAt = models.DateTimeField(null=True, blank=True)
-    tourEntryUrl = FlexibleUrlField(
-        blank=True,
-        null=True,
-        help_text='Опционально. Если пусто — на фронте подставится /tour-packs/{slug}/index.htm.',
-    )
+    tourEntryUrl = FlexibleUrlField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

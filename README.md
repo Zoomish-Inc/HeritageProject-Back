@@ -105,7 +105,7 @@ curl -i http://127.0.0.1:8000/api/v1/heritage/ -H "If-None-Match: \"...\""
 4. Вставить ID файла или share-ссылку в `tourGoogleDriveFileId`
 5. Включить `tourPublished`, Save → автодеплой фронта через Deploy Hook (~2–5 мин)
 
-`tourEntryUrl` опционален: если пусто, фронт подставит `/tour-packs/{slug}/index.htm`.
+Путь к туру на фронте всегда `/tour-packs/{slug}/index.htm` — задаётся фронтом, не в админке.
 
 **Manifest API (для Vercel build):**
 

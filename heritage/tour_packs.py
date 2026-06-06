@@ -40,20 +40,14 @@ def normalize_google_drive_file_id(raw):
 
 def tour_fields_changed(instance):
     if not instance.pk:
-        return bool(
-            instance.tourPublished
-            or instance.tourGoogleDriveFileId
-            or instance.tourEntryUrl
-        )
+        return bool(instance.tourPublished or instance.tourGoogleDriveFileId)
 
     old_published = getattr(instance, '_old_tour_published', None)
     old_file_id = getattr(instance, '_old_tour_google_drive_file_id', None)
-    old_entry_url = getattr(instance, '_old_tour_entry_url', None)
 
     return (
         instance.tourPublished != old_published
         or instance.tourGoogleDriveFileId != old_file_id
-        or instance.tourEntryUrl != old_entry_url
     )
 
 

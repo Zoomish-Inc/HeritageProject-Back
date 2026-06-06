@@ -219,7 +219,7 @@ class HeritageObjectSerializer(serializers.ModelSerializer):
             'architectural_style', 'architect',
             'architectural_description', 'history',
             'short_description', 'visual_style_notes',
-            'order', 'isPublished', 'tourPublished', 'tourEntryUrl',
+            'order', 'isPublished', 'tourPublished',
             'cover',
             'architecture_details',
             'before_after_pairs',

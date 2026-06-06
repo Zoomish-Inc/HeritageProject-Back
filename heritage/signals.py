@@ -41,7 +41,6 @@ def heritage_object_pre_save(sender, instance, **kwargs):
     instance._old_slug = None
     instance._old_tour_published = None
     instance._old_tour_google_drive_file_id = ''
-    instance._old_tour_entry_url = None
 
     if instance.pk:
         try:
@@ -49,12 +48,10 @@ def heritage_object_pre_save(sender, instance, **kwargs):
                 'slug',
                 'tourPublished',
                 'tourGoogleDriveFileId',
-                'tourEntryUrl',
             ).get(pk=instance.pk)
             instance._old_slug = old.slug
             instance._old_tour_published = old.tourPublished
             instance._old_tour_google_drive_file_id = old.tourGoogleDriveFileId or ''
-            instance._old_tour_entry_url = old.tourEntryUrl
         except HeritageObject.DoesNotExist:
             pass
 

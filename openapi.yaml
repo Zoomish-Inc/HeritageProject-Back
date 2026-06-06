@@ -311,11 +311,6 @@ components:
           type: boolean
         tourPublished:
           type: boolean
-        tourEntryUrl:
-          type: string
-          nullable: true
-          description: Опционально. Если пусто — на фронте подставится /tour-packs/{slug}/index.htm.
-          maxLength: 2048
         cover:
           type: string
           readOnly: true
