@@ -169,6 +169,10 @@ else:
     }
 
 VERCEL_DEPLOY_HOOK_URL = os.getenv('VERCEL_DEPLOY_HOOK_URL', '').strip()
+FRONTEND_BASE_URL = os.getenv(
+    'FRONTEND_BASE_URL',
+    'https://heritage-project-front.vercel.app',
+).strip().rstrip('/')
 
 # ====================== LOCALIZATION & STATIC =======================
 LANGUAGE_CODE = 'ru'

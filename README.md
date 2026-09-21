@@ -36,6 +36,7 @@ cp .env.example .env
 | `DATABASE_URL` | PostgreSQL (Aiven / Render) | `postgres://...` |
 | `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Aiven PostgreSQL (альтернатива DATABASE_URL) | см. Aiven Console |
 | `VERCEL_DEPLOY_HOOK_URL` | Deploy Hook URL фронтенда на Vercel | `https://api.vercel.com/v1/integrations/deploy/...` |
+| `FRONTEND_BASE_URL` | URL фронта (кнопка «Открыть сайт» в админке) | `https://heritage-project-front.vercel.app` |
 | `CORS_ALLOWED_ORIGINS` | Whitelist origin фронта (через запятую) | `https://heritage-project-front.vercel.app` |
 | `CORS_ALLOWED_ORIGIN_REGEXES` | Regex для preview-доменов Vercel | `^https://[\w-]+\.vercel\.app$` |
 | `HERITAGE_HTTP_CACHE_MAX_AGE` | `Cache-Control: max-age` для GET list/detail | `3600` |
