@@ -42,6 +42,12 @@ cp .env.example .env
 | `HERITAGE_HTTP_CACHE_MAX_AGE` | `Cache-Control: max-age` для GET list/detail | `3600` |
 | `API_RATE_LIMIT_PER_MINUTE` | Лимит публичных GET на IP в минуту | `120` |
 | `API_RATE_LIMIT_ENABLED` | Включить rate limit (`false` в dev) | `true` |
+| `DJANGO_SUPERUSER_USERNAME` | Логин суперюзера | `admin` |
+| `DJANGO_SUPERUSER_PASSWORD` | Пароль суперюзера | задайте свой |
+| `ROLE_EDITOR_PASSWORD` | Пароль `editor` | `EditorHeritage2026!` |
+| `ROLE_PUBLISHER_PASSWORD` | Пароль `publisher` | `PublisherHeritage2026!` |
+| `ROLE_TOUR_ONLY_PASSWORD` | Пароль `tour_only` | `TourHeritage2026!` |
+| `ROLE_VIEWER_PASSWORD` | Пароль `viewer` | `ViewerHeritage2026!` |
 
 Без `REDIS_URL` API работает как раньше — данные читаются из PostgreSQL/SQLite.
 
@@ -146,4 +152,65 @@ Render **Cron Jobs платные**. На free tier внешний монито�
 ```bash
 python manage.py keep_db_alive
 ```
+
+### Роли админки
+
+На Render **не нужен Shell**. Группы и пользователи создаются при каждом деплое из `build.sh`:
+
+```bash
+python manage.py setup_admin_roles
+```
+
+#### Build Command на Render (обязательно)
+
+Замените `pip install -r requirements.txt` на:
+
+```bash
+bash build.sh
+```
+
+`build.sh` делает: install → collectstatic → migrate → createsu → setup_admin_roles.
+
+Start Command оставьте:
+
+```bash
+gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+```
+
+#### Логины и пароли (после деплоя)
+
+| Роль | Логин | Env для пароля | Пароль по умолчанию (если env пустой) |
+|------|-------|----------------|----------------------------------------|
+| Superadmin | `admin` | `DJANGO_SUPERUSER_PASSWORD` | `changeme123` |
+| Editor | `editor` | `ROLE_EDITOR_PASSWORD` | `EditorHeritage2026!` |
+| Publisher | `publisher` | `ROLE_PUBLISHER_PASSWORD` | `PublisherHeritage2026!` |
+| TourOnly | `tour_only` | `ROLE_TOUR_ONLY_PASSWORD` | `TourHeritage2026!` |
+| Viewer | `viewer` | `ROLE_VIEWER_PASSWORD` | `ViewerHeritage2026!` |
+
+Вход: `https://heritageproject-back.onrender.com/admin/`
+
+Рекомендация: в Render → Environment задайте свои пароли через env выше. При следующем деплое пароли синхронизируются автоматически.
+
+| Группа | Может | Не может |
+|--------|--------|----------|
+| **Viewer** | Смотреть ОКН | Править / создавать / удалять |
+| **Editor** | Править тексты и медиа (inlines) существующих ОКН | Создавать/удалять карточку ОКН; `isPublished`; блок 3D-тура; Users |
+| **TourOnly** | Только `tourPublished` + `tourGoogleDriveFileId` | Контент, `isPublished`, create/delete карточки, Users |
+| **Publisher** | Как Editor + `isPublished` + 3D-тур | Users / superuser |
+| **Superadmin** | Всё (`is_superuser`) | — пользователь `admin` |
+
+Правила:
+1. Superadmin только у 1–2 человек; смените `DJANGO_SUPERUSER_PASSWORD`.
+2. Не комбинируйте **TourOnly** + **Editor** без причины (права объединяются).
+3. Журнал: **Log entries** (Publisher/Superadmin) + «История» на карточке объекта.
+
+#### Чеклист рисков суперюзера
+
+- [ ] Сменить дефолтные пароли через env на Render и задеплоить
+- [ ] Editor: нет Add/Delete карточки ОКН; не меняет publish/tour
+- [ ] TourOnly: меняет только тур; тексты readonly
+- [ ] Publisher: может publish + тур + контент
+- [ ] Viewer: только просмотр
+- [ ] После правок в «Истории» / Log entries есть запись
+
 
