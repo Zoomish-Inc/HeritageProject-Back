@@ -236,7 +236,7 @@ class PhotoItem(models.Model):
     caption_ru = models.CharField(max_length=255, blank=True)
     caption_uz = models.CharField(max_length=255, blank=True)
     isHistorical = models.BooleanField(default=False)
-    year = models.IntegerField(blank=True)
+    year = models.IntegerField(null=True, blank=True)
     sourceUrl = FlexibleUrlField(blank=True)
     credit_ru = models.CharField(max_length=255, blank=True)
     credit_uz = models.CharField(max_length=255, blank=True)

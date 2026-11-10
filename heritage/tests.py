@@ -1,10 +1,29 @@
 import json
 
-from django.test import RequestFactory, SimpleTestCase, override_settings
+from django.forms.models import modelform_factory
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 
 from heritage.http_cache import apply_public_cache_headers, compute_etag, not_modified_if_etag_matches
 from heritage.middleware import PublicApiRateLimitMiddleware
+from heritage.models import HeritageObject, PhotoItem
 from rest_framework.response import Response
+
+
+class PhotoItemYearTests(TestCase):
+    def test_save_without_year(self):
+        heritage = HeritageObject.objects.create(name_ru='Мужская гимназия', slug='gymnasium')
+        form_class = modelform_factory(PhotoItem, fields=['url', 'year'])
+        form = form_class(
+            data={
+                'url': 'https://thumb.cloud.mail.ru/weblink/thumb/xw1/Mo41/BihcnaP57',
+                'year': '',
+            },
+            instance=PhotoItem(heritage=heritage),
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        photo = form.save()
+        photo.refresh_from_db()
+        self.assertIsNone(photo.year)
 
 
 class HttpCacheTests(SimpleTestCase):
