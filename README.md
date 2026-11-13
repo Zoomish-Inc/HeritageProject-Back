@@ -61,6 +61,18 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+### Docker
+
+На VPS или сервере университета:
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Поднимаются приложение (порт 8000), PostgreSQL и Redis. Пароль в DATABASE_URL должен совпадать с POSTGRES_PASSWORD. Проверка: http://127.0.0.1:8000/api/v1/health/. Render по-прежнему собирается через build.sh, без Docker. В DATABASE_URL для compose нужен sslmode=disable: локальный Postgres без SSL.
+
+
 ### Как обновлять OpenAPI схему (`openapi.yaml`) при изменении serializers
 Проект использует **drf-spectacular**. Файл `openapi.yaml` хранится в репозитории и генерируется автоматически.
 
