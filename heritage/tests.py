@@ -26,6 +26,21 @@ class PhotoItemYearTests(TestCase):
         self.assertIsNone(photo.year)
 
 
+class PublishedListTests(TestCase):
+    def test_list_returns_more_than_six_published(self):
+        for index in range(7):
+            HeritageObject.objects.create(
+                name_ru=f'object {index}',
+                slug=f'object-{index}',
+                isPublished=True,
+                order=index,
+            )
+        response = self.client.get('/api/v1/heritage/')
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content)
+        self.assertEqual(len(payload['data']), 7)
+
+
 class HttpCacheTests(SimpleTestCase):
     def test_compute_etag_is_stable(self):
         data = [{'slug': 'a', 'order': 1}]

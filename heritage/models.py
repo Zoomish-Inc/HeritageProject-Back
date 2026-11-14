@@ -86,39 +86,7 @@ class HeritageObject(models.Model):
 
         self.tourGoogleDriveFileId = normalize_google_drive_file_id(self.tourGoogleDriveFileId)
 
-        # Publishing limit logic (only if object is being published)
-        if self.isPublished:
-            published_count = HeritageObject.objects.filter(isPublished=True).exclude(pk=self.pk).count()
-            if published_count >= 6:
-                raise ValidationError(
-                    'Нельзя опубликовать больше 6 объектов. '
-                    'Сначала снимите публикацию с другого объекта.'
-                )
-
         super().save(*args, **kwargs)
-
-
-class HeritageListItem(models.Model):
-    """DEPRECATED: list API должен использовать HeritageObject, а не этот дубликат."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-    order = models.PositiveIntegerField(default=0)
-    name_ru = models.CharField(max_length=255, blank=True)
-    name_uz = models.CharField(max_length=255, blank=True)
-    yearRange = models.CharField(max_length=50, blank=True)
-    address_ru = models.CharField(max_length=255, blank=True)
-    address_uz = models.CharField(max_length=255, blank=True)
-    coverImageUrl = FlexibleUrlField(blank=True)
-    shortDescription_ru = models.CharField(max_length=255, blank=True)
-    shortDescription_uz = models.CharField(max_length=255, blank=True)
-    order = models.PositiveIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    isPublished = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['order']
 
 
 # ====================== ВЛОЖЕННЫЕ МОДЕЛИ ======================

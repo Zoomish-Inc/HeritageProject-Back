@@ -2,6 +2,11 @@ services:
   web:
     build: .
     env_file: .env
+    environment:
+      DEBUG: "false"
+      ENVIRONMENT: production
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: postgres://heritage:${POSTGRES_PASSWORD}@db:5432/heritage?sslmode=disable
     ports:
       - "8000:8000"
     depends_on:
@@ -14,13 +19,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_USER: heritage
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: heritage
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U heritage -d heritage"]
       interval: 5s
       timeout: 5s
       retries: 10

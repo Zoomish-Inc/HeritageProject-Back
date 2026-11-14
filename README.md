@@ -3,7 +3,7 @@
 ### Требования
 
 
-- Python 3.11 или выше
+- Python 3.12 или выше
 - PostgreSQL (локально или Docker)
 - Redis (опционально, для кеширования/задач)
 
@@ -61,16 +61,29 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-### Docker
+### Docker на сервере
 
-На VPS или сервере университета:
+Нужны Docker и Docker Compose. PostgreSQL, Redis и адрес базы в `.env` не прописываются: их поднимает `docker-compose.yml`.
 
 ```bash
 cp .env.example .env
+```
+
+В `.env` заполнить пять значений:
+
+- `DJANGO_SECRET_KEY` — длинная случайная строка
+- `DJANGO_ALLOWED_HOSTS` — домен или IP сервера, через запятую с `localhost,127.0.0.1`
+- `CSRF_TRUSTED_ORIGINS` — тот же адрес со схемой, например `https://heritage.example.ru` или `http://10.0.0.5:8000`
+- `POSTGRES_PASSWORD` — пароль базы, без символов `@`, `:`, `/`
+- `DJANGO_SUPERUSER_PASSWORD` — пароль входа `admin`
+
+```bash
 docker compose up -d --build
 ```
 
-Поднимаются приложение (порт 8000), PostgreSQL и Redis. Пароль в DATABASE_URL должен совпадать с POSTGRES_PASSWORD. Проверка: http://127.0.0.1:8000/api/v1/health/. Render по-прежнему собирается через build.sh, без Docker. В DATABASE_URL для compose нужен sslmode=disable: локальный Postgres без SSL.
+Проверка: `http://127.0.0.1:8000/api/v1/health/` должен вернуть `status: ok`. Админка: порт `8000`, путь `/admin/`. Логин `admin` и пароль из `DJANGO_SUPERUSER_PASSWORD`. Остальные роли создаются при первом запуске, пароли по умолчанию в таблице ниже. Свои пароли ролей задаются переменными `ROLE_EDITOR_PASSWORD`, `ROLE_PUBLISHER_PASSWORD`, `ROLE_TOUR_ONLY_PASSWORD`, `ROLE_VIEWER_PASSWORD` до первого запуска. Позже смена пароля в админке деплоем не сбрасывается.
+
+Снаружи открыт только порт 8000. HTTPS ставит прокси университета перед этим портом. Render по-прежнему собирается через `build.sh`, без Docker.
 
 
 ### Как обновлять OpenAPI схему (`openapi.yaml`) при изменении serializers
@@ -193,7 +206,7 @@ gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 
 | Роль | Логин | Env для пароля | Пароль по умолчанию (если env пустой) |
 |------|-------|----------------|----------------------------------------|
-| Superadmin | `admin` | `DJANGO_SUPERUSER_PASSWORD` | `changeme123` |
+| Superadmin | `admin` | `DJANGO_SUPERUSER_PASSWORD` | не создаётся, если env пустой |
 | Editor | `editor` | `ROLE_EDITOR_PASSWORD` | `EditorHeritage2026!` |
 | Publisher | `publisher` | `ROLE_PUBLISHER_PASSWORD` | `PublisherHeritage2026!` |
 | TourOnly | `tour_only` | `ROLE_TOUR_ONLY_PASSWORD` | `TourHeritage2026!` |
@@ -201,7 +214,7 @@ gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
 
 Вход: `https://heritageproject-back.onrender.com/admin/`
 
-Рекомендация: в Render → Environment задайте свои пароли через env выше. При следующем деплое пароли синхронизируются автоматически.
+Рекомендация: задайте свои пароли через env до первого запуска. Следующий деплой уже записанный пароль не меняет.
 
 | Группа | Может | Не может |
 |--------|--------|----------|

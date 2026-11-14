@@ -10,20 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import sys
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ====================== SECRET KEY ======================
-SECRET_KEY = os.getenv(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only',
-)
+DEBUG = os.getenv('DEBUG', 'false').lower() in ('true', '1', 'yes')
 
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 'yes')
+_DEV_SECRET_KEY = 'django-insecure-super-secret-key-for-heritage-project-2025-local-development-only'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', '').strip()
+if not SECRET_KEY:
+    if DEBUG or 'test' in sys.argv:
+        SECRET_KEY = _DEV_SECRET_KEY
+    else:
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY is required when DEBUG is false')
 
 ALLOWED_HOSTS = os.getenv(
     'DJANGO_ALLOWED_HOSTS',

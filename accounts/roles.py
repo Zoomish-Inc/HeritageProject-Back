@@ -191,7 +191,6 @@ def setup_admin_roles():
 
 
 def ensure_role_users():
-    """Create/update staff users for each role. Password from env or default."""
     setup_admin_roles()
     results = []
     for spec in ROLE_USERS:
@@ -210,7 +209,8 @@ def ensure_role_users():
         user.is_staff = True
         user.is_superuser = False
         user.is_active = True
-        user.set_password(password)
+        if created:
+            user.set_password(password)
         user.save()
         user.groups.set([group])
         results.append({

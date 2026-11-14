@@ -1,8 +1,6 @@
 from rest_framework import serializers
 from .models import (
     HeritageObject,
-    HeritageListItem,
-
     BiographyMilestone,
     ArchitectureDetail,
     BeforeAfterPair,

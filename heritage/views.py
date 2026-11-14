@@ -52,7 +52,7 @@ class HeritageListView(APIView, ApiResponseMixin):
 
     def get(self, request):
         def load():
-            queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')[:6]
+            queryset = HeritageObject.objects.filter(isPublished=True).order_by('order')
             serializer = self.serializer_class(queryset, many=True, context={'request': request})
             return serializer.data
 

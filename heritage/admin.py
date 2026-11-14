@@ -319,19 +319,6 @@ class HeritageObjectAdmin(nested_admin.NestedModelAdmin):
         return can_edit_content(user) or can_edit_tour(user)
 
     def save_model(self, request, obj, form, change):
-        if obj.isPublished:
-            published_count = HeritageObject.objects.filter(
-                isPublished=True,
-            ).exclude(pk=obj.pk).count()
-            if published_count >= 6:
-                self.message_user(
-                    request,
-                    'Нельзя опубликовать больше 6 объектов! '
-                    'Сначала снимите публикацию с другого объекта.',
-                    level=messages.ERROR,
-                )
-                return
-
         old = None
         if change and obj.pk:
             old = HeritageObject.objects.filter(pk=obj.pk).only(

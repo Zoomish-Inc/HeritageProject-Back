@@ -11,13 +11,12 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN grep -v '^psycopg2==' requirements.txt > /tmp/requirements.docker.txt \
-    && pip install --no-cache-dir -r /tmp/requirements.docker.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
     && chmod +x /app/docker/entrypoint.sh \
-    && python manage.py collectstatic --noinput \
+    && DJANGO_SECRET_KEY=build-collectstatic-only python manage.py collectstatic --noinput \
     && mkdir -p /app/media \
     && useradd --create-home --uid 1000 app \
     && chown -R app:app /app

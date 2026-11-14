@@ -82,3 +82,15 @@ class AdminRolesTests(TestCase):
             self.assertFalse(user.is_superuser)
             self.assertTrue(user.groups.filter(name=group_name).exists())
             self.assertTrue(user.check_password(passwords[username]))
+
+    def test_ensure_role_users_does_not_reset_password(self):
+        ensure_role_users()
+        user = User.objects.get(username='editor')
+        user.set_password('changed-by-admin')
+        user.save()
+
+        ensure_role_users()
+
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('changed-by-admin'))
+        self.assertTrue(user.groups.filter(name=GROUP_EDITOR).exists())
