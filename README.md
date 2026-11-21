@@ -85,6 +85,8 @@ docker compose up -d --build
 
 Снаружи открыт только порт 8000. HTTPS ставит прокси университета перед этим портом. Render по-прежнему собирается через `build.sh`, без Docker.
 
+Туры на сервере: `TOUR_SYNC_MODE=local`, файлы в volume `heritage_tourpacks` (`/data/tour-packs`). Контейнер фронта монтирует тот же volume в `/app/public/tour-packs`. Сначала поднимают бэкенд: он создаёт volume. На Vercel флаг не задают, остаётся режим `vercel`.
+
 
 ### Как обновлять OpenAPI схему (`openapi.yaml`) при изменении serializers
 Проект использует **drf-spectacular**. Файл `openapi.yaml` хранится в репозитории и генерируется автоматически.
@@ -135,7 +137,9 @@ curl -i http://127.0.0.1:8000/api/v1/heritage/ -H "If-None-Match: \"...\""
 2. Загрузить zip на Google Drive → доступ «Все, у кого есть ссылка»
 3. В админке объекта: `slug` = имя папки тура на фронте (например `zhenskaya-gimnaziya`)
 4. Вставить ID файла или share-ссылку в `tourGoogleDriveFileId`
-5. Включить `tourPublished`, Save → автодеплой фронта через Deploy Hook (~2–5 мин)
+5. Включить `tourPublished` и сохранить.
+   `TOUR_SYNC_MODE=vercel` (по умолчанию, Render): Deploy Hook пересобирает фронт, zip скачивается на сборке.
+   `TOUR_SYNC_MODE=local` (сервер): бэкенд сам скачивает zip в общий каталог `heritage_tourpacks`, пересборка фронта не нужна.
 
 Путь к туру на фронте всегда `/tour-packs/{slug}/index.htm` — задаётся фронтом, не в админке.
 

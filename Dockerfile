@@ -19,7 +19,8 @@ RUN sed -i 's/\r$//' /app/docker/entrypoint.sh \
     && DJANGO_SECRET_KEY=build-collectstatic-only python manage.py collectstatic --noinput \
     && mkdir -p /app/media \
     && useradd --create-home --uid 1000 app \
-    && chown -R app:app /app
+    && mkdir -p /data/tour-packs \
+    && chown -R app:app /app /data/tour-packs
 
 USER app
 

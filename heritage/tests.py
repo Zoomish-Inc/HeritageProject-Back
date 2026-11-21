@@ -1,4 +1,10 @@
+import io
 import json
+import zipfile
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from django.forms.models import modelform_factory
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
@@ -6,6 +12,7 @@ from django.test import RequestFactory, SimpleTestCase, TestCase, override_setti
 from heritage.http_cache import apply_public_cache_headers, compute_etag, not_modified_if_etag_matches
 from heritage.middleware import PublicApiRateLimitMiddleware
 from heritage.models import HeritageObject, PhotoItem
+from heritage.tour_sync import TourSyncError, install_tour_zip, sync_object
 from rest_framework.response import Response
 
 
@@ -91,3 +98,81 @@ class PublicApiRateLimitMiddlewareTests(SimpleTestCase):
         request = RequestFactory().get('/api/v1/health/')
         for _ in range(5):
             self.assertEqual(middleware(request).status_code, 200)
+
+
+
+def _tour_zip(entries):
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for name, payload in entries:
+            archive.writestr(name, payload)
+    return buffer.getvalue()
+
+
+class TourPackSyncTests(SimpleTestCase):
+    def test_extracts_nested_web_root(self):
+        payload = _tour_zip([
+            ("Web/index.htm", "<html></html>"),
+            ("Web/lib/tdvplayer.js", "player"),
+        ])
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            zip_path = root / "pack.zip"
+            zip_path.write_bytes(payload)
+            install_tour_zip(root, "chapel", zip_path)
+            self.assertEqual((root / "chapel" / "index.htm").read_text(encoding="utf-8"), "<html></html>")
+            self.assertTrue((root / "chapel" / "lib" / "tdvplayer.js").is_file())
+
+    def test_rejects_parent_path(self):
+        payload = _tour_zip([
+            ("../index.htm", "x"),
+            ("index.htm", "<html></html>"),
+            ("lib/tdvplayer.js", "player"),
+        ])
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            zip_path = root / "pack.zip"
+            zip_path.write_bytes(payload)
+            with self.assertRaises(TourSyncError):
+                install_tour_zip(root, "chapel", zip_path)
+            self.assertFalse((root / "chapel").exists())
+
+    def test_unpublish_removes_directory(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pack = root / "chapel"
+            pack.mkdir()
+            (pack / "index.htm").write_text("old", encoding="utf-8")
+            obj = SimpleNamespace(
+                slug="chapel",
+                tourPublished=False,
+                tourGoogleDriveFileId="file-id",
+                _old_slug="chapel",
+                _old_tour_published=True,
+                _old_tour_google_drive_file_id="file-id",
+            )
+            with patch.dict("os.environ", {"TOUR_PACKS_ROOT": str(root)}):
+                sync_object(obj)
+            self.assertFalse(pack.exists())
+
+    def test_skips_download_when_already_installed(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            pack = root / "chapel"
+            (pack / "lib").mkdir(parents=True)
+            (pack / "index.htm").write_text("ready", encoding="utf-8")
+            obj = SimpleNamespace(
+                slug="chapel",
+                tourPublished=True,
+                tourGoogleDriveFileId="file-id",
+                _old_slug="chapel",
+                _old_tour_published=True,
+                _old_tour_google_drive_file_id="file-id",
+            )
+            with patch.dict("os.environ", {"TOUR_PACKS_ROOT": str(root)}):
+                with patch("heritage.tour_sync.download_drive_zip") as download:
+                    sync_object(obj)
+            download.assert_not_called()
+            self.assertEqual((pack / "index.htm").read_text(encoding="utf-8"), "ready")
+
+

@@ -333,7 +333,14 @@ class HeritageObjectAdmin(nested_admin.NestedModelAdmin):
 
         self._log_critical_changes(request, obj, old)
 
-        if getattr(obj, '_vercel_deploy_failed', False):
+        tour_error = getattr(obj, '_tour_sync_error', None)
+        if tour_error:
+            self.message_user(
+                request,
+                f'Объект сохранён, но тур не обновлён: {tour_error}',
+                level=messages.WARNING,
+            )
+        elif getattr(obj, '_vercel_deploy_failed', False):
             self.message_user(
                 request,
                 'Тур сохранён, но не удалось запустить деплой фронтенда. '

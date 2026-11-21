@@ -1,3 +1,4 @@
+import logging
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -14,6 +15,9 @@ from .models import (
     PhotoItem,
 )
 from .tour_packs import tour_fields_changed, trigger_vercel_deploy
+from .tour_sync import TourSyncError, remove_tour_dir, sync_mode, sync_object
+
+logger = logging.getLogger(__name__)
 
 
 def _invalidate_by_slug(slug):
@@ -71,13 +75,22 @@ def heritage_object_post_save(sender, instance, **kwargs):
     )
 
     if tour_fields_changed(instance):
-        if not trigger_vercel_deploy():
+        if sync_mode() == 'local':
+            try:
+                sync_object(instance)
+            except TourSyncError as exc:
+                instance._tour_sync_error = str(exc)
+            except Exception:
+                logger.exception('tour sync failed slug=%s', instance.slug)
+                instance._tour_sync_error = 'Не удалось скачать тур.'
+        elif not trigger_vercel_deploy():
             instance._vercel_deploy_failed = True
 
 
 @receiver(post_delete, sender=HeritageObject)
 def heritage_object_post_delete(sender, instance, **kwargs):
     cache_service.invalidate_heritage(slug=instance.slug)
+    remove_tour_dir(instance.slug)
 
 
 def _nested_post_save(sender, instance, **kwargs):
